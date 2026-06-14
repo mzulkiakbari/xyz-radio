@@ -13,25 +13,37 @@ export async function GET(request: Request) {
 
   try {
     // Ambil detail stasiun radio dari public API Azuracast
-    const response = await fetch(`${RADIO_API_URL}/api/nowplaying/${id}`);
+    const infoResponse = await fetch(`${RADIO_API_URL}/api/nowplaying/${id}`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch station info: ${response.statusText}`);
+    if (!infoResponse.ok) {
+      throw new Error(`Failed to fetch station info: ${infoResponse.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await infoResponse.json();
     const listenUrl = data?.station?.listen_url;
 
     if (!listenUrl) {
       return new NextResponse("Stream URL not found", { status: 404 });
     }
 
-    // Redirect browser/client langsung ke stream Icecast aslinya
-    // Ini penting karena Vercel Serverless Function tidak bisa menahan stream audio berdurasi panjang
-    return NextResponse.redirect(listenUrl);
+    // Ambil stream Icecast secara langsung
+    const streamResponse = await fetch(listenUrl);
+
+    if (!streamResponse.ok) {
+      throw new Error(`Failed to fetch stream: ${streamResponse.statusText}`);
+    }
+
+    // Pipe response stream directly ke client (sebagai Proxy)
+    return new NextResponse(streamResponse.body, {
+      headers: {
+        "Content-Type": streamResponse.headers.get("Content-Type") || "audio/mpeg",
+        "Transfer-Encoding": "chunked",
+        "Cache-Control": "no-cache",
+      },
+    });
 
   } catch (error) {
-    console.error("Stream Redirect Error:", error);
-    return new NextResponse("Error fetching stream info", { status: 500 });
+    console.error("Stream Proxy Error:", error);
+    return new NextResponse("Error fetching stream", { status: 500 });
   }
 }
