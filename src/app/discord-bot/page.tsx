@@ -28,7 +28,7 @@ export default function BroadcastPage() {
   const [isLoadingChannels, setIsLoadingChannels] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = "http://localhost:3001"; // Sebaiknya diambil dari .env
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   useEffect(() => {
     fetchChannels();

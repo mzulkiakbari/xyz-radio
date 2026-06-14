@@ -25,7 +25,8 @@ export default function PodcastPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:3001/api/azuracast/stations/${selectedStation.id}/podcasts`);
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/podcasts`);
         const json = await res.json();
         
         if (json.success) {

@@ -33,7 +33,8 @@ export default function MediaPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:3001/api/azuracast/stations/${selectedStation.id}/media`);
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
         const json = await res.json();
         
         if (json.success) {
@@ -55,7 +56,8 @@ export default function MediaPage() {
     if (!ytUrl) return alert("Masukkan URL terlebih dahulu");
     setIsDownloading(true);
     try {
-      const res = await fetch("http://localhost:3001/api/media/download", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: ytUrl })

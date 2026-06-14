@@ -35,13 +35,13 @@ export default function LoginPage() {
         {/* Glow */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-        
+
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="w-20 h-20 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 border border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
             <Radio className="w-10 h-10 text-indigo-400" />
           </div>
-          
-          <h1 className="text-2xl font-bold mb-2">Welcome to XYZ Radio</h1>
+
+          <h1 className="text-2xl font-bold mb-2">Welcome to XYZ Media by XYZ Corporation</h1>
           <p className="text-zinc-400 mb-8">Sign in to manage your radio streams and broadcast settings.</p>
 
           <button
