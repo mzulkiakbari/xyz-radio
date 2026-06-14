@@ -60,13 +60,23 @@ export default function MediaPage() {
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytUrl })
+        body: JSON.stringify({ url: ytUrl, stationId: selectedStation.id })
       });
       const data = await res.json();
       if (data.success) {
-        alert("Download selesai! (Fitur push ke Azuracast akan menyusul)");
+        alert("Berhasil! Lagu sudah didownload dan otomatis ditambahkan ke playlist AzuraCast.");
         setIsUploadModalOpen(false);
         setYtUrl("");
+        // Reload list media setelah berhasil
+        const fetchMedia = async () => {
+          setIsLoading(true);
+          try {
+            const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
+            const json = await res.json();
+            if (json.success) setMediaFiles(json.data || []);
+          } catch (err) {} finally { setIsLoading(false); }
+        };
+        fetchMedia();
       } else {
         alert("Download gagal: " + data.error);
       }

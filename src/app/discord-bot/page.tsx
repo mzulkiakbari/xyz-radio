@@ -90,7 +90,8 @@ export default function BroadcastPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             channelIds: [selectedChannelId],
-            streamUrl: streamUrl
+            streamUrl: streamUrl,
+            stationId: selectedStation ? selectedStation.id : null
           })
         });
         const json = await res.json();
