@@ -53,6 +53,7 @@ export default function MediaPage() {
   }, [selectedStation]);
 
   const handleDownload = async () => {
+    if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
     if (!ytUrl) return alert("Masukkan URL terlebih dahulu");
     setIsDownloading(true);
     try {
