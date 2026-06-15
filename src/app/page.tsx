@@ -57,63 +57,63 @@ export default function OverviewPage() {
   return (
     <div className="p-8 max-w-5xl mx-auto w-full">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Overview</h1>
-        <p className="text-zinc-400">
+        <h1 className="text-3xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Overview</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">
           Manage your radio stream and monitor your broadcast status.
         </p>
       </header>
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-zinc-400 font-medium">Listeners</h3>
+            <h3 className="text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">Listeners</h3>
             <Headphones className="text-blue-500 w-5 h-5" />
           </div>
-          <p className="text-4xl font-bold">{listeners}</p>
+          <p className="text-4xl font-bold text-zinc-900 dark:text-white transition-colors duration-300">{listeners}</p>
           <p className="text-sm text-zinc-500 mt-2">Current Active</p>
         </div>
         
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-zinc-400 font-medium">Stream Status</h3>
+            <h3 className="text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">Stream Status</h3>
             <Radio className={`${isLive ? 'text-green-500 animate-pulse' : 'text-red-500'} w-5 h-5`} />
           </div>
           <p className={`text-4xl font-bold ${isLive ? 'text-green-500' : 'text-red-500'}`}>{isLive ? "Live" : "Offline"}</p>
           <p className="text-sm text-zinc-500 mt-2">Server Connection</p>
         </div>
         
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none transition-colors duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-zinc-400 font-medium">Bitrate Siaran</h3>
+            <h3 className="text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">Bitrate Siaran</h3>
             <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-purple-500"></div>
             </div>
           </div>
-          <p className="text-4xl font-bold">{bitrate}</p>
+          <p className="text-4xl font-bold text-zinc-900 dark:text-white transition-colors duration-300">{bitrate}</p>
           <p className="text-sm text-zinc-500 mt-2">Audio Quality</p>
         </div>
       </div>
 
       {/* Stream Link Section */}
-      <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl relative overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl relative overflow-hidden shadow-sm dark:shadow-none transition-colors duration-300">
         {/* Decor */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         
-        <h2 className="text-xl font-bold mb-4 relative">Stream URL (Encrypted)</h2>
-        <p className="text-zinc-400 mb-6 relative">
+        <h2 className="text-xl font-bold mb-4 relative text-zinc-900 dark:text-white transition-colors duration-300">Stream URL (Encrypted)</h2>
+        <p className="text-zinc-500 dark:text-zinc-400 mb-6 relative transition-colors duration-300">
           Use this URL in your web player or Discord bot. It safely proxies to the actual AzuraCast endpoint.
         </p>
 
-        <div className="flex items-center bg-black border border-zinc-800 rounded-xl overflow-hidden relative">
-          <div className="px-4 py-3 bg-zinc-800 text-zinc-400 font-mono text-sm border-r border-zinc-700">
+        <div className="flex items-center bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden relative transition-colors duration-300">
+          <div className="px-4 py-3 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-mono text-sm border-r border-zinc-300 dark:border-zinc-700 transition-colors duration-300">
             GET
           </div>
           <input
             type="text"
             readOnly
             value={streamUrl}
-            className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-zinc-200 font-mono text-sm w-full"
+            className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-zinc-900 dark:text-zinc-200 font-mono text-sm w-full transition-colors duration-300"
           />
           <button
             onClick={handleCopy}

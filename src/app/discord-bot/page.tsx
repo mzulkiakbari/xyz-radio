@@ -122,8 +122,8 @@ export default function BroadcastPage() {
     <div className="p-8 max-w-5xl mx-auto w-full flex flex-col h-full">
       <header className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Broadcast Controls</h1>
-          <p className="text-zinc-400">
+          <h1 className="text-3xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Broadcast Controls</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">
             Start or stop the radio stream in your selected Discord channel.
           </p>
         </div>
@@ -141,28 +141,28 @@ export default function BroadcastPage() {
 
       <div className="flex-1 flex flex-col md:flex-row gap-8">
         {/* Main Control Panel */}
-        <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-3xl p-8 md:p-12 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 md:p-12 flex flex-col items-center justify-center relative overflow-hidden shadow-sm dark:shadow-none transition-colors duration-300">
           <div className={`absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}></div>
           
           <div className="relative z-10 flex flex-col items-center">
             <div className={`w-48 h-48 rounded-full flex items-center justify-center mb-8 transition-all duration-500 ${
               isPlaying 
                 ? "bg-blue-500/10 shadow-[0_0_100px_rgba(59,130,246,0.3)]" 
-                : "bg-zinc-800/50"
+                : "bg-zinc-100 dark:bg-zinc-800/50"
             }`}>
               <div className={`w-36 h-36 rounded-full flex items-center justify-center transition-all duration-500 ${
                 isPlaying
                   ? "bg-blue-500/20 animate-pulse"
-                  : "bg-zinc-800"
+                  : "bg-zinc-200 dark:bg-zinc-800"
               }`}>
-                <Mic2 className={`w-16 h-16 ${isPlaying ? "text-blue-400" : "text-zinc-600"}`} />
+                <Mic2 className={`w-16 h-16 transition-colors duration-300 ${isPlaying ? "text-blue-500 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-600"}`} />
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold mb-2">
+            <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">
               {isConnecting ? "Connecting..." : isPlaying ? "On Air" : "Offline"}
             </h2>
-            <p className="text-zinc-400 mb-10 text-center max-w-xs">
+            <p className="text-zinc-500 dark:text-zinc-400 mb-10 text-center max-w-xs transition-colors duration-300">
               {isPlaying 
                 ? "Bot is currently streaming audio to the Discord voice channel." 
                 : "Select a channel and click the button to start broadcasting."}
@@ -194,11 +194,11 @@ export default function BroadcastPage() {
 
         {/* Settings / Info Sidebar */}
         <div className="w-full md:w-80 space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <Settings2 className="w-5 h-5 text-zinc-400" />
-                <h3 className="font-bold text-lg">Target Configuration</h3>
+                <Settings2 className="w-5 h-5 text-zinc-500 dark:text-zinc-400 transition-colors duration-300" />
+                <h3 className="font-bold text-zinc-900 dark:text-white transition-colors duration-300">Target Server</h3>
               </div>
               <button onClick={fetchChannels} className="text-zinc-500 hover:text-white transition-colors" title="Refresh Channels">
                 <RefreshCw className={`w-4 h-4 ${isLoadingChannels ? "animate-spin" : ""}`} />
@@ -207,12 +207,14 @@ export default function BroadcastPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Discord Server</label>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">
+                  Select Server
+                </label>
                 <select 
                   value={selectedGuildId} 
                   onChange={handleGuildChange}
                   disabled={isPlaying || isLoadingChannels}
-                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                  className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors duration-300"
                 >
                   {isLoadingChannels ? (
                     <option>Loading servers...</option>
@@ -227,12 +229,14 @@ export default function BroadcastPage() {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Voice Channel</label>
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">
+                  Voice Channel
+                </label>
                 <select 
                   value={selectedChannelId} 
                   onChange={(e) => setSelectedChannelId(e.target.value)}
                   disabled={isPlaying || isLoadingChannels || !activeGuild || activeGuild.voiceChannels.length === 0}
-                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                  className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors duration-300"
                 >
                   {!activeGuild ? (
                     <option>Select a server first</option>

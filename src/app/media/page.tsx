@@ -141,8 +141,8 @@ export default function MediaPage() {
       {/* Header & Controls */}
       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Media Library</h1>
-          <p className="text-zinc-400">Kelola semua file audio untuk stasiun {selectedStation.name}</p>
+          <h1 className="text-3xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Media Library</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">Kelola semua file audio untuk stasiun {selectedStation.name}</p>
         </div>
         <button
           onClick={() => setIsUploadModalOpen(true)}
@@ -155,13 +155,13 @@ export default function MediaPage() {
 
       {/* Search Bar */}
       <div className="mb-6 relative">
-        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 transition-colors duration-300" />
         <input
           type="text"
           placeholder="Cari lagu, artis, atau album..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl pl-12 pr-4 py-4 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors duration-300 shadow-sm dark:shadow-none"
         />
       </div>
 
@@ -173,8 +173,8 @@ export default function MediaPage() {
       )}
 
       {/* Media List */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-none transition-colors duration-300">
+        <div className="grid grid-cols-12 gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider transition-colors duration-300">
           <div className="col-span-6 md:col-span-5">File / Title</div>
           <div className="hidden md:block col-span-4">Artist</div>
           <div className="col-span-4 md:col-span-2 text-right">Duration</div>
@@ -190,26 +190,26 @@ export default function MediaPage() {
             {searchQuery ? "Tidak ada media yang cocok dengan pencarian." : "Belum ada media di stasiun ini."}
           </div>
         ) : (
-          <div className="divide-y divide-zinc-800/50">
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50 transition-colors duration-300">
             {filteredMedia.map((file, i) => (
-              <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-zinc-800/30 transition-colors group">
+              <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
                 <div className="col-span-6 md:col-span-5 flex items-center space-x-4">
-                  <button className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors flex-shrink-0">
+                  <button className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-blue-500 text-zinc-400 dark:text-zinc-500 group-hover:text-white transition-colors flex-shrink-0">
                     <Play className="w-4 h-4 fill-current ml-0.5" />
                   </button>
                   <div className="min-w-0">
-                    <p className="text-white font-medium truncate">{file.title || file.text || file.path}</p>
+                    <p className="text-zinc-900 dark:text-white font-medium truncate transition-colors duration-300">{file.title || file.text || file.path}</p>
                     <p className="text-zinc-500 text-sm truncate">{file.path}</p>
                   </div>
                 </div>
-                <div className="hidden md:block col-span-4 text-zinc-400 truncate">
+                <div className="hidden md:block col-span-4 text-zinc-500 dark:text-zinc-400 truncate transition-colors duration-300">
                   {file.artist || "Unknown Artist"}
                 </div>
-                <div className="col-span-4 md:col-span-2 text-right text-zinc-400 font-medium">
+                <div className="col-span-4 md:col-span-2 text-right text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">
                   {file.length_text || "--:--"}
                 </div>
                 <div className="col-span-2 md:col-span-1 flex justify-end">
-                  <button className="p-2 text-zinc-500 hover:text-white transition-colors rounded-lg hover:bg-zinc-800">
+                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -221,21 +221,21 @@ export default function MediaPage() {
 
       {/* Upload Modal */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
-              <h2 className="text-xl font-bold">Upload Media</h2>
-              <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-500 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl transition-colors duration-300">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Upload Media</h2>
+              <button onClick={() => setIsUploadModalOpen(false)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
                 ✕
               </button>
             </div>
             
             <div className="p-6">
-              <div className="flex p-1 bg-black rounded-xl mb-6">
+              <div className="flex p-1 bg-zinc-100 dark:bg-black rounded-xl mb-6 transition-colors duration-300">
                 <button
                   onClick={() => setActiveTab("local")}
                   className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                    activeTab === "local" ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-white"
+                    activeTab === "local" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                   }`}
                 >
                   Local File
@@ -243,7 +243,7 @@ export default function MediaPage() {
                 <button
                   onClick={() => setActiveTab("youtube")}
                   className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                    activeTab === "youtube" ? "bg-red-500 text-white" : "text-zinc-500 hover:text-white"
+                    activeTab === "youtube" ? "bg-red-500 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                   }`}
                 >
                   YouTube / Spotify
@@ -251,13 +251,13 @@ export default function MediaPage() {
               </div>
 
               {activeTab === "local" && (
-                <div className="border-2 border-dashed border-zinc-700 hover:border-blue-500 bg-black/50 rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group">
+                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-500 bg-zinc-50 dark:bg-black/50 rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group">
                   <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileAudio className="w-8 h-8 text-blue-500" />
                   </div>
-                  <h3 className="font-bold text-lg mb-1">Click to Browse</h3>
+                  <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white transition-colors duration-300">Click to Browse</h3>
                   <p className="text-zinc-500 text-sm">or drag and drop audio files here</p>
-                  <p className="text-zinc-600 text-xs mt-4">Supports MP3, WAV, FLAC</p>
+                  <p className="text-zinc-400 dark:text-zinc-600 text-xs mt-4 transition-colors duration-300">Supports MP3, WAV, FLAC</p>
                 </div>
               )}
 
@@ -268,24 +268,24 @@ export default function MediaPage() {
                     <p className="text-sm font-medium">Download audio directly from YouTube or Spotify URLs.</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-2">Media URL</label>
+                    <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-300">Media URL</label>
                     <input
                       type="text"
                       placeholder="https://youtube.com/watch?v=..."
                       value={ytUrl}
                       onChange={(e) => setYtUrl(e.target.value)}
                       disabled={isDownloading}
-                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50"
+                      className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50"
                     />
                   </div>
 
                   {isDownloading && (
-                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                    <div className="bg-zinc-50 dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 transition-colors duration-300">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-zinc-400 font-medium">{statusText || "Memproses..."}</span>
+                        <span className="text-sm text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">{statusText || "Memproses..."}</span>
                         <span className="text-sm font-bold text-red-500">{downloadProgress}%</span>
                       </div>
-                      <div className="w-full bg-black rounded-full h-2.5 overflow-hidden">
+                      <div className="w-full bg-zinc-200 dark:bg-black rounded-full h-2.5 overflow-hidden transition-colors duration-300">
                         <div 
                           className="bg-red-500 h-2.5 rounded-full transition-all duration-300 ease-out" 
                           style={{ width: `${downloadProgress}%` }}

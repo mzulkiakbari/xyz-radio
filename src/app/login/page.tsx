@@ -30,8 +30,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-      <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-300">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-3xl w-full max-w-md shadow-lg dark:shadow-2xl relative overflow-hidden transition-colors duration-300">
         {/* Glow */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
@@ -41,8 +41,8 @@ export default function LoginPage() {
             <Radio className="w-10 h-10 text-indigo-400" />
           </div>
 
-          <h1 className="text-2xl font-bold mb-2">Welcome to XYZ Media by XYZ Corporation</h1>
-          <p className="text-zinc-400 mb-8">Sign in to manage your radio streams and broadcast settings.</p>
+          <h1 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Welcome to XYZ Media by XYZ Corporation</h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mb-8 transition-colors duration-300">Sign in to manage your radio streams and broadcast settings.</p>
 
           <button
             onClick={handleDiscordLogin}

@@ -52,11 +52,11 @@ export default function PodcastPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto w-full">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center space-x-3">
+        <h1 className="text-3xl font-bold mb-2 flex items-center space-x-3 text-zinc-900 dark:text-white transition-colors duration-300">
           <PodcastIcon className="w-8 h-8 text-blue-500" />
           <span>Podcasts ({selectedStation.name})</span>
         </h1>
-        <p className="text-zinc-400">
+        <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">
           Kelola episode podcast langsung dari server AzuraCast Anda.
         </p>
       </header>
@@ -72,30 +72,30 @@ export default function PodcastPage() {
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
       ) : podcasts.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-12 text-center flex flex-col items-center">
-          <PodcastIcon className="w-16 h-16 text-zinc-700 mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Belum ada Podcast</h2>
-          <p className="text-zinc-400 max-w-md">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-12 text-center flex flex-col items-center shadow-sm dark:shadow-none transition-colors duration-300">
+          <PodcastIcon className="w-16 h-16 text-zinc-300 dark:text-zinc-700 mb-4 transition-colors duration-300" />
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2 transition-colors duration-300">Belum ada Podcast</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 max-w-md transition-colors duration-300">
             Anda belum memiliki podcast yang di-publish di stasiun radio ini. Silakan tambahkan melalui dashboard AzuraCast utama.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {podcasts.map((podcast) => (
-            <div key={podcast.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-colors group">
-              <div className="aspect-square bg-zinc-800 relative flex items-center justify-center overflow-hidden">
+            <div key={podcast.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-blue-500/50 dark:hover:border-blue-500/50 transition-colors group shadow-sm dark:shadow-none">
+              <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 relative flex items-center justify-center overflow-hidden transition-colors duration-300">
                 {podcast.art ? (
                   <img src={podcast.art} alt={podcast.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
-                  <PodcastIcon className="w-16 h-16 text-zinc-700 group-hover:scale-110 transition-transform duration-500" />
+                  <PodcastIcon className="w-16 h-16 text-zinc-400 dark:text-zinc-700 group-hover:scale-110 transition-transform duration-500" />
                 )}
                 <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                   <PlayCircle className="w-16 h-16 text-white drop-shadow-lg" />
                 </button>
               </div>
               <div className="p-6">
-                <h3 className="font-bold text-lg text-white mb-2 line-clamp-1">{podcast.title || "Untitled Podcast"}</h3>
-                <p className="text-zinc-400 text-sm line-clamp-2 mb-4">{podcast.description || "Tidak ada deskripsi."}</p>
+                <h3 className="font-bold text-lg text-zinc-900 dark:text-white mb-2 line-clamp-1 transition-colors duration-300">{podcast.title || "Untitled Podcast"}</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm line-clamp-2 mb-4 transition-colors duration-300">{podcast.description || "Tidak ada deskripsi."}</p>
                 <div className="flex items-center space-x-4 text-xs text-zinc-500">
                   <span className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
