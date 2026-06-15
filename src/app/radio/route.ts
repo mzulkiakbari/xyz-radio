@@ -26,21 +26,11 @@ export async function GET(request: Request) {
       return new NextResponse("Stream URL not found", { status: 404 });
     }
 
-    // Ambil stream Icecast secara langsung
-    const streamResponse = await fetch(listenUrl);
-
-    if (!streamResponse.ok) {
-      throw new Error(`Failed to fetch stream: ${streamResponse.statusText}`);
-    }
-
-    // Pipe response stream directly ke client (sebagai Proxy)
-    return new NextResponse(streamResponse.body, {
-      headers: {
-        "Content-Type": streamResponse.headers.get("Content-Type") || "audio/mpeg",
-        "Transfer-Encoding": "chunked",
-        "Cache-Control": "no-cache",
-      },
-    });
+    // Jangan pipe response stream ke client melalui Next.js (sebagai Proxy)
+    // karena Next.js memiliki limit timeout 5 menit (300 detik) untuk request!
+    // Sebaiknya langsung redirect URL icecast ke client agar browser yang memutar.
+    const secureListenUrl = listenUrl.replace('http://', 'https://');
+    return NextResponse.redirect(secureListenUrl);
 
   } catch (error) {
     console.error("Stream Proxy Error:", error);
