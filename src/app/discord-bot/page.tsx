@@ -212,7 +212,7 @@ export default function BroadcastPage() {
                   value={selectedGuildId} 
                   onChange={handleGuildChange}
                   disabled={isPlaying || isLoadingChannels}
-                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium outline-none focus:border-blue-500 disabled:opacity-50"
+                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 disabled:opacity-50"
                 >
                   {isLoadingChannels ? (
                     <option>Loading servers...</option>
@@ -232,7 +232,7 @@ export default function BroadcastPage() {
                   value={selectedChannelId} 
                   onChange={(e) => setSelectedChannelId(e.target.value)}
                   disabled={isPlaying || isLoadingChannels || !activeGuild || activeGuild.voiceChannels.length === 0}
-                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium outline-none focus:border-blue-500 disabled:opacity-50"
+                  className="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 disabled:opacity-50"
                 >
                   {!activeGuild ? (
                     <option>Select a server first</option>
