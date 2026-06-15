@@ -38,17 +38,41 @@ export default function BroadcastPage() {
     setIsLoadingChannels(true);
     setError(null);
     try {
-      const res = await fetch(`${backendUrl}/api/bot/channels`);
-      const json = await res.json();
+      const [resChannels, resStatus] = await Promise.all([
+        fetch(`${backendUrl}/api/bot/channels`),
+        fetch(`${backendUrl}/api/bot/status`).catch(() => null)
+      ]);
+      
+      const json = await resChannels.json();
+      const statusJson = resStatus ? await resStatus.json() : null;
+      
+      let playing = false;
+      let activeChanId = "";
+      if (statusJson && statusJson.success && statusJson.activeChannels && statusJson.activeChannels.length > 0) {
+          playing = true;
+          activeChanId = statusJson.activeChannels[0];
+      }
       
       if (json.success) {
         setGuilds(json.data);
         if (json.data.length > 0) {
-          setSelectedGuildId(json.data[0].id);
-          if (json.data[0].voiceChannels.length > 0) {
-            setSelectedChannelId(json.data[0].voiceChannels[0].id);
+          if (playing && activeChanId) {
+            let foundGuild = json.data.find((g: Guild) => g.voiceChannels.some(c => c.id === activeChanId));
+            if (foundGuild) {
+              setSelectedGuildId(foundGuild.id);
+              setSelectedChannelId(activeChanId);
+            } else {
+              setSelectedGuildId(json.data[0].id);
+              if (json.data[0].voiceChannels.length > 0) setSelectedChannelId(json.data[0].voiceChannels[0].id);
+            }
+          } else {
+            setSelectedGuildId(json.data[0].id);
+            if (json.data[0].voiceChannels.length > 0) {
+              setSelectedChannelId(json.data[0].voiceChannels[0].id);
+            }
           }
         }
+        setIsPlaying(playing);
       } else {
         setError(json.error || "Gagal memuat daftar server.");
       }
