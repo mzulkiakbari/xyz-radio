@@ -25,6 +25,8 @@ export default function MediaPage() {
 
   const [ytUrl, setYtUrl] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [statusText, setStatusText] = useState("");
 
   useEffect(() => {
     if (!selectedStation) return;
@@ -56,6 +58,9 @@ export default function MediaPage() {
     if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
     if (!ytUrl) return alert("Masukkan URL terlebih dahulu");
     setIsDownloading(true);
+    setDownloadProgress(0);
+    setStatusText("Menghubungkan ke server...");
+
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
       const res = await fetch(`${backendUrl}/api/media/download`, {
@@ -63,28 +68,61 @@ export default function MediaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: ytUrl, stationId: selectedStation.id })
       });
-      const data = await res.json();
-      if (data.success) {
-        alert("Berhasil! Lagu sudah didownload dan otomatis ditambahkan ke playlist AzuraCast.");
-        setIsUploadModalOpen(false);
-        setYtUrl("");
+
+      if (!res.ok || !res.body) throw new Error("Gagal terhubung ke backend");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let isSuccess = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n\n");
+        
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.substring(6));
+              if (data.progress !== undefined) setDownloadProgress(data.progress);
+              if (data.statusText) setStatusText(data.statusText);
+              if (data.error) {
+                alert(`Error: ${data.statusText}`);
+                break;
+              }
+              if (data.success) {
+                isSuccess = true;
+                alert("Berhasil! Lagu sudah didownload, diunggah ke AzuraCast, dan otomatis memutar.");
+                setIsUploadModalOpen(false);
+                setYtUrl("");
+              }
+            } catch (e) {
+              // Abaikan line yang tidak bisa di-parse
+            }
+          }
+        }
+      }
+
+      if (isSuccess) {
         // Reload list media setelah berhasil
         const fetchMedia = async () => {
           setIsLoading(true);
           try {
-            const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
-            const json = await res.json();
+            const mediaRes = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
+            const json = await mediaRes.json();
             if (json.success) setMediaFiles(json.data || []);
           } catch (err) {} finally { setIsLoading(false); }
         };
         fetchMedia();
-      } else {
-        alert("Download gagal: " + data.error);
       }
     } catch (err) {
       alert("Error: " + err);
     } finally {
       setIsDownloading(false);
+      setDownloadProgress(0);
+      setStatusText("");
     }
   };
 
@@ -234,15 +272,40 @@ export default function MediaPage() {
                       placeholder="https://youtube.com/watch?v=..."
                       value={ytUrl}
                       onChange={(e) => setYtUrl(e.target.value)}
-                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                      disabled={isDownloading}
+                      className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50"
                     />
                   </div>
+
+                  {isDownloading && (
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-zinc-400 font-medium">{statusText || "Memproses..."}</span>
+                        <span className="text-sm font-bold text-red-500">{downloadProgress}%</span>
+                      </div>
+                      <div className="w-full bg-black rounded-full h-2.5 overflow-hidden">
+                        <div 
+                          className="bg-red-500 h-2.5 rounded-full transition-all duration-300 ease-out" 
+                          style={{ width: `${downloadProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
                   <button 
                     onClick={handleDownload}
                     disabled={isDownloading}
-                    className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50"
+                    className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
                   >
-                    {isDownloading ? "Downloading..." : "Extract Audio"}
+                    {isDownloading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Downloading...</span>
+                      </>
+                    ) : "Extract Audio"}
                   </button>
                 </div>
               )}
