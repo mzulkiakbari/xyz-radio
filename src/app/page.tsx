@@ -9,10 +9,42 @@ export default function OverviewPage() {
   const [appUrl, setAppUrl] = useState("");
   const { selectedStation } = useStation();
 
+  const [listeners, setListeners] = useState(0);
+  const [isLive, setIsLive] = useState(false);
+  const [bitrate, setBitrate] = useState("0 kbps");
+
   useEffect(() => {
-    // Gunakan NEXT_PUBLIC_APP_URL dari .env.local, fallback ke window.location.origin
     setAppUrl(process.env.NEXT_PUBLIC_APP_URL || window.location.origin);
   }, []);
+
+  useEffect(() => {
+    if (!selectedStation) return;
+
+    const fetchStats = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/nowplaying`);
+        const json = await res.json();
+        
+        if (json.success && json.data) {
+          const np = json.data;
+          setListeners(np.listeners?.current || 0);
+          setIsLive(np.is_online || false);
+          
+          if (np.station?.mounts && np.station.mounts.length > 0) {
+            setBitrate(`${np.station.mounts[0].bitrate} kbps ${np.station.mounts[0].format.toUpperCase()}`);
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat stats:", err);
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 10000); // Update setiap 10 detik
+
+    return () => clearInterval(interval);
+  }, [selectedStation]);
 
   const streamUrl = selectedStation ? `${appUrl}/radio?id=${selectedStation.id}` : `${appUrl}/radio?id=...`;
 
@@ -38,28 +70,28 @@ export default function OverviewPage() {
             <h3 className="text-zinc-400 font-medium">Listeners</h3>
             <Headphones className="text-blue-500 w-5 h-5" />
           </div>
-          <p className="text-4xl font-bold">128</p>
-          <p className="text-sm text-green-500 mt-2">+12% from last hour</p>
+          <p className="text-4xl font-bold">{listeners}</p>
+          <p className="text-sm text-zinc-500 mt-2">Current Active</p>
         </div>
         
         <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-zinc-400 font-medium">Stream Status</h3>
-            <Radio className="text-green-500 w-5 h-5 animate-pulse" />
+            <Radio className={`${isLive ? 'text-green-500 animate-pulse' : 'text-red-500'} w-5 h-5`} />
           </div>
-          <p className="text-4xl font-bold text-green-500">Live</p>
-          <p className="text-sm text-zinc-500 mt-2">Uptime: 24h 12m</p>
+          <p className={`text-4xl font-bold ${isLive ? 'text-green-500' : 'text-red-500'}`}>{isLive ? "Live" : "Offline"}</p>
+          <p className="text-sm text-zinc-500 mt-2">Server Connection</p>
         </div>
         
         <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-zinc-400 font-medium">Bandwidth</h3>
+            <h3 className="text-zinc-400 font-medium">Bitrate Siaran</h3>
             <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-purple-500"></div>
             </div>
           </div>
-          <p className="text-4xl font-bold">1.2 TB</p>
-          <p className="text-sm text-zinc-500 mt-2">This month</p>
+          <p className="text-4xl font-bold">{bitrate}</p>
+          <p className="text-sm text-zinc-500 mt-2">Audio Quality</p>
         </div>
       </div>
 

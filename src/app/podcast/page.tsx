@@ -9,7 +9,8 @@ type PodcastData = {
   title: string;
   description: string;
   episodes: number;
-  // ... (menyesuaikan struktur asli dari AzuraCast)
+  art?: string;
+  art_updated_at?: number;
 };
 
 export default function PodcastPage() {
@@ -82,10 +83,14 @@ export default function PodcastPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {podcasts.map((podcast) => (
             <div key={podcast.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-colors group">
-              <div className="aspect-video bg-zinc-800 relative flex items-center justify-center">
-                <PodcastIcon className="w-12 h-12 text-zinc-700 group-hover:scale-110 transition-transform" />
-                <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <PlayCircle className="w-12 h-12 text-white" />
+              <div className="aspect-square bg-zinc-800 relative flex items-center justify-center overflow-hidden">
+                {podcast.art ? (
+                  <img src={podcast.art} alt={podcast.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                ) : (
+                  <PodcastIcon className="w-16 h-16 text-zinc-700 group-hover:scale-110 transition-transform duration-500" />
+                )}
+                <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                  <PlayCircle className="w-16 h-16 text-white drop-shadow-lg" />
                 </button>
               </div>
               <div className="p-6">

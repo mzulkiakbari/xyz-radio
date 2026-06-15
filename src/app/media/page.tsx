@@ -27,6 +27,7 @@ export default function MediaPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
+  const [successToast, setSuccessToast] = useState("");
 
   useEffect(() => {
     if (!selectedStation) return;
@@ -94,7 +95,8 @@ export default function MediaPage() {
               }
               if (data.success) {
                 isSuccess = true;
-                alert("Berhasil! Lagu sudah didownload, diunggah ke AzuraCast, dan otomatis memutar.");
+                setSuccessToast("Berhasil! Lagu baru akan diputar pada antrean berikutnya.");
+                setTimeout(() => setSuccessToast(""), 5000);
                 setIsUploadModalOpen(false);
                 setYtUrl("");
               }
@@ -311,6 +313,18 @@ export default function MediaPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {successToast && (
+        <div className="fixed bottom-8 right-8 bg-green-500 text-white px-6 py-4 rounded-xl shadow-[0_10px_40px_rgba(34,197,94,0.3)] font-medium flex items-center gap-3 z-50 animate-in slide-in-from-bottom-5">
+          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          {successToast}
         </div>
       )}
     </div>
