@@ -9,12 +9,12 @@ export async function GET(request: Request) {
   }
 
   // Ambil RADIO_API_URL dari environment
-  const RADIO_API_URL = process.env.RADIO_API_URL || "https://xyz-radio.pokonime.com";
+  const RADIO_API_URL = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
 
   try {
     // Ambil detail stasiun radio dari public API Azuracast
     const infoResponse = await fetch(`${RADIO_API_URL}/api/nowplaying/${id}`);
-    
+
     if (!infoResponse.ok) {
       throw new Error(`Failed to fetch station info: ${infoResponse.statusText}`);
     }
