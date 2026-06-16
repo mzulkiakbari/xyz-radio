@@ -73,7 +73,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname === "/") {
+  if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname.startsWith("/portal") || pathname === "/") {
     return <main className="flex-1 w-full h-full">{children}</main>;
   }
 
