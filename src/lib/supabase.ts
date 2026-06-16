@@ -29,7 +29,8 @@ const cookieStorage = {
     if (typeof window === 'undefined') return;
     const domain = getCookieDomain();
     const domainAttr = domain ? `domain=${domain}; ` : '';
-    document.cookie = `${key}=${encodeURIComponent(value)}; ${domainAttr}path=/; max-age=31536000; SameSite=Lax; Secure`;
+    const secureAttr = window.location.protocol === 'https:' ? 'Secure;' : '';
+    document.cookie = `${key}=${encodeURIComponent(value)}; ${domainAttr}path=/; max-age=31536000; SameSite=Lax; ${secureAttr}`;
   },
   removeItem: (key: string): void => {
     if (typeof window === 'undefined') return;
