@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
-import { Loader2, AlertCircle, Radio } from "lucide-react";
+import { Loader2, AlertCircle, Radio, Users, Settings } from "lucide-react";
 import { StationProvider, useStation, Station } from "./StationContext";
 
 function AuthLogic({ children }: { children: React.ReactNode }) {
@@ -13,6 +13,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [radioError, setRadioError] = useState(false);
+  const [portalOptions, setPortalOptions] = useState<{ isEmployee: boolean, isAdmin: boolean } | null>(null);
   
   const { stations, setStations, selectedStation, setSelectedStation } = useStation();
   
@@ -58,7 +59,16 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           setRadioError(true);
         }
       } else if (pathname === "/login") {
-        router.push("/panel");
+        try {
+          const { data } = await supabase.from('employees').select('is_admin, status').eq('id', session.user.id).single();
+          if (data && data.status === 'Active') {
+            setPortalOptions({ isEmployee: true, isAdmin: data.is_admin });
+          } else {
+            router.push("/panel");
+          }
+        } catch(err) {
+          router.push("/panel");
+        }
       }
       
       setIsLoading(false);
@@ -77,6 +87,62 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
   if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname === "/") {
     return <main className="flex-1 w-full h-full">{children}</main>;
+  }
+
+  if (portalOptions) {
+    const host = window.location.host.replace('employee.', '').replace('admin.', '');
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4 transition-colors duration-300">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-8 rounded-3xl w-full max-w-lg shadow-sm dark:shadow-2xl transition-colors duration-300">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Pilih Portal</h2>
+            <p className="text-zinc-500 dark:text-zinc-400">Pilih layanan yang ingin Anda akses.</p>
+          </div>
+          <div className="space-y-4">
+            <button 
+              onClick={() => window.location.href = `${window.location.protocol}//employee.${host}`}
+              className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all group"
+            >
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg flex items-center justify-center mr-4">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-600">Employee Management</h3>
+                <p className="text-sm text-zinc-500">Akses panel karyawan XYZ Co</p>
+              </div>
+            </button>
+
+            {portalOptions.isAdmin && (
+              <button 
+                onClick={() => window.location.href = `${window.location.protocol}//admin.${host}`}
+                className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all group"
+              >
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-lg flex items-center justify-center mr-4">
+                  <Settings className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-bold text-zinc-900 dark:text-white group-hover:text-purple-600">Admin Panel</h3>
+                  <p className="text-sm text-zinc-500">Kontrol teknis bot dan sistem</p>
+                </div>
+              </button>
+            )}
+
+            <button 
+              onClick={() => { setPortalOptions(null); router.push("/panel"); }}
+              className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-all group"
+            >
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg flex items-center justify-center mr-4">
+                <Radio className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-bold text-zinc-900 dark:text-white group-hover:text-orange-600">Customer Radio</h3>
+                <p className="text-sm text-zinc-500">Kelola stasiun radio Anda</p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (radioError) {
