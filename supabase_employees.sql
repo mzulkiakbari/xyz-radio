@@ -26,7 +26,7 @@ CREATE POLICY "HR and Direksi can view all employee records."
   USING ( 
     EXISTS (
       SELECT 1 FROM public.employees e 
-      WHERE e.id = auth.uid() AND (e.division = 'Direksi' OR e.division = 'HR')
+      WHERE e.id = auth.uid() AND (e.position IN ('CEO', 'CFO', 'CMO', 'COO', 'CTO', 'Co-CEO') OR e.division = 'HR')
     )
   );
 

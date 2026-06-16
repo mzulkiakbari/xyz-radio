@@ -10,6 +10,8 @@ export default function PortalPage() {
   const [portalOptions, setPortalOptions] = useState<{ isEmployee: boolean, isAdmin: boolean } | null>(null);
   const router = useRouter();
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -20,17 +22,26 @@ export default function PortalPage() {
       }
 
       try {
-        const { data } = await supabase.from('employees').select('is_admin, status').eq('id', session.user.id).single();
+        const { data, error } = await supabase.from('employees').select('is_admin, status').eq('id', session.user.id).single();
+        
+        if (error) {
+           console.error("Supabase Error:", error);
+           setErrorMsg(error.message);
+           setIsLoading(false);
+           return;
+        }
+
         if (data && data.status === 'Active') {
           setPortalOptions({ isEmployee: true, isAdmin: data.is_admin });
           setIsLoading(false);
         } else {
-          // If not an employee, redirect directly to Radio Panel
-          router.push("/panel");
+          setErrorMsg(`Data ditemukan, tapi status bukan 'Active' (Status saat ini: ${data?.status || 'Tidak ada/Null'})`);
+          setIsLoading(false);
         }
-      } catch (err) {
-        // Error or not found = redirect to panel
-        router.push("/panel");
+      } catch (err: any) {
+        console.error("Catch Error:", err);
+        setErrorMsg(err.message || "Unknown error");
+        setIsLoading(false);
       }
     };
 
@@ -41,6 +52,19 @@ export default function PortalPage() {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
+        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg text-center">
+          <h2 className="text-xl font-bold text-red-500 mb-2">Gagal Membaca Data Karyawan</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">{errorMsg}</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6"> Pastikan Row Level Security di database sudah diatur agar user bisa membaca tabel employees.</p>
+          <button onClick={() => router.push("/panel")} className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full font-bold">Lanjutkan ke Radio Panel</button>
+        </div>
       </div>
     );
   }

@@ -28,7 +28,7 @@ export function RoleGuard({ children, allowedDivisions, allowedPositions, requir
   useEffect(() => {
     const checkRole = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         const host = window.location.host.replace('employee.', '').replace('admin.', '');
         window.location.href = `${window.location.protocol}//${host}/login`;
@@ -56,8 +56,9 @@ export function RoleGuard({ children, allowedDivisions, allowedPositions, requir
         return;
       }
 
-      // Direksi bypasses division checks
-      if (emp.division === 'Direksi') {
+      // Executives bypass division checks
+      const execs = ['CEO', 'CFO', 'CMO', 'COO', 'CTO', 'Co-CEO'];
+      if (execs.includes(emp.position.toUpperCase())) {
         setIsAuthorized(true);
         setIsLoading(false);
         return;
@@ -78,7 +79,7 @@ export function RoleGuard({ children, allowedDivisions, allowedPositions, requir
       } else {
         setIsAuthorized(false);
       }
-      
+
       setIsLoading(false);
     };
 
