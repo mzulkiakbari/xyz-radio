@@ -22,8 +22,10 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
+      const isPublicRoute = pathname === "/" || pathname === "/login";
+      
       if (!session) {
-        if (pathname !== "/login") router.push("/login");
+        if (!isPublicRoute) router.push("/login");
         setIsLoading(false);
         return;
       }
@@ -43,7 +45,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           if (json.success) {
             setStations(json.data);
             setIsAuthenticated(true);
-            if (pathname === "/login") router.push("/");
+            if (pathname === "/login") router.push("/panel");
           } else {
             // Not registered in Azuracast
             await supabase.auth.signOut();
@@ -68,6 +70,10 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
+  }
+
+  if (pathname === "/") {
+    return <>{children}</>;
   }
 
   if (pathname === "/login") {

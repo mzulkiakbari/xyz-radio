@@ -16,11 +16,11 @@ import {
 import { useStation } from "./StationContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Overview", href: "/" },
-  { icon: ListMusic, label: "Media", href: "/media" },
-  { icon: Podcast, label: "Podcast", href: "/podcast" },
-  { icon: Radio, label: "Discord Bot", href: "/discord-bot" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: LayoutDashboard, label: "Overview", href: "/panel" },
+  { icon: ListMusic, label: "Media", href: "/panel/media" },
+  { icon: Podcast, label: "Podcast", href: "/panel/podcast" },
+  { icon: Radio, label: "Discord Bot", href: "/panel/discord-bot" },
+  { icon: Settings, label: "Settings", href: "/panel/settings" },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
