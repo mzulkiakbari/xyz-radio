@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { Building2, MapPin, Mail, ChevronDown, Radio, Megaphone, ArrowRight, Menu, X, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Building2, MapPin, Mail, ChevronDown, Radio, Megaphone, ArrowRight, Menu, X, CheckCircle2, MessageSquare } from "lucide-react";
 
 export default function CompanyProfile() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,10 +35,8 @@ export default function CompanyProfile() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center space-x-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
+            <div className="flex-shrink-0 flex items-center space-x-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              <Image src="/logo.png" alt="XYZ Co Logo" width={40} height={40} className="w-10 h-10 object-contain rounded-xl bg-white p-1" />
               <span className="font-bold text-2xl tracking-tight">XYZ Co</span>
             </div>
 
@@ -384,10 +383,8 @@ export default function CompanyProfile() {
             
             {/* Brand */}
             <div>
-              <div className="flex items-center space-x-2 mb-6">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
+              <div className="flex items-center space-x-3 mb-6">
+                <Image src="/logo.png" alt="XYZ Co Logo" width={40} height={40} className="w-10 h-10 object-contain rounded-xl bg-white p-1" />
                 <span className="font-bold text-xl tracking-tight">XYZ Co</span>
               </div>
               <p className="text-zinc-400 leading-relaxed mb-6">
@@ -416,15 +413,15 @@ export default function CompanyProfile() {
             {/* Contact */}
             <div id="contact">
               <h4 className="text-lg font-bold mb-6">Hubungi Kami</h4>
-              <div className="flex items-start space-x-4 group mb-4">
-                <div className="p-3 bg-zinc-900 rounded-xl group-hover:bg-purple-600/20 transition-colors">
-                  <Mail className="w-6 h-6 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-zinc-300 font-medium mb-1">Email inquiries</p>
-                  <p className="text-zinc-500">contact@xyzco.sa</p>
-                </div>
-              </div>
+              <a 
+                href="https://bit.ly/XYZCo" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-center space-x-3 px-6 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#5865F2]/20 mb-4"
+              >
+                <MessageSquare className="w-5 h-5" />
+                <span>Join our Discord</span>
+              </a>
               <div className="mt-8">
                 {isLoggedIn ? (
                   <Link href="/panel" className="inline-block px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-colors">
