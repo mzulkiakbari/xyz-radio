@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeContext";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthWrapper>{children}</AuthWrapper>
         </ThemeProvider>
+        <Toaster position="top-right" />
       </body>
     </html>
   );

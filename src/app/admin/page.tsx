@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Send, Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface TextChannel {
   id: string;
@@ -67,8 +68,8 @@ export default function AdminDashboard() {
   };
 
   const handleSend = async () => {
-    if (!selectedChannel) return alert("Pilih channel terlebih dahulu!");
-    if (!content && !useEmbed) return alert("Isi pesan atau aktifkan embed!");
+    if (!selectedChannel) return toast.error("Pilih channel terlebih dahulu!");
+    if (!content && !useEmbed) return toast.error("Isi pesan atau aktifkan embed!");
 
     setIsSending(true);
     try {
@@ -96,13 +97,21 @@ export default function AdminDashboard() {
       const json = await res.json();
       
       if (json.success) {
-        alert("Pesan berhasil dikirim!");
+        toast.success("Pesan berhasil dikirim!");
         setContent("");
+        setEmbed({
+          title: "",
+          description: "",
+          color: "#3b82f6",
+          footer: "",
+          imageUrl: ""
+        });
+        setUseEmbed(false);
       } else {
-        alert("Gagal: " + json.error);
+        toast.error("Gagal: " + json.error);
       }
     } catch (err) {
-      alert("Terjadi kesalahan sistem.");
+      toast.error("Terjadi kesalahan sistem.");
     }
     setIsSending(false);
   };
