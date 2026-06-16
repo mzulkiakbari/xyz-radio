@@ -14,9 +14,9 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [radioError, setRadioError] = useState(false);
   const [portalOptions, setPortalOptions] = useState<{ isEmployee: boolean, isAdmin: boolean } | null>(null);
-  
+
   const { stations, setStations, selectedStation, setSelectedStation } = useStation();
-  
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,7 +31,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
       }
 
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         if (!isPublicRoute) router.push("/login");
         setIsLoading(false);
@@ -66,11 +66,11 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           } else {
             router.push("/panel");
           }
-        } catch(err) {
+        } catch (err) {
           router.push("/panel");
         }
       }
-      
+
       setIsLoading(false);
     };
 
@@ -99,7 +99,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
             <p className="text-zinc-500 dark:text-zinc-400">Pilih layanan yang ingin Anda akses.</p>
           </div>
           <div className="space-y-4">
-            <button 
+            <button
               onClick={() => window.location.href = `${window.location.protocol}//employee.${host}`}
               className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all group"
             >
@@ -113,7 +113,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
             </button>
 
             {portalOptions.isAdmin && (
-              <button 
+              <button
                 onClick={() => window.location.href = `${window.location.protocol}//admin.${host}`}
                 className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all group"
               >
@@ -127,7 +127,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
               </button>
             )}
 
-            <button 
+            <button
               onClick={() => { setPortalOptions(null); router.push("/panel"); }}
               className="w-full flex items-center p-4 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-all group"
             >
@@ -135,7 +135,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
                 <Radio className="w-6 h-6" />
               </div>
               <div className="text-left">
-                <h3 className="font-bold text-zinc-900 dark:text-white group-hover:text-orange-600">Customer Radio</h3>
+                <h3 className="font-bold text-zinc-900 dark:text-white group-hover:text-orange-600">Radio</h3>
                 <p className="text-sm text-zinc-500">Kelola stasiun radio Anda</p>
               </div>
             </button>
@@ -156,7 +156,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         <a href="https://bit.ly/XYZCo" target="_blank" rel="noreferrer" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
           Hubungi via Discord
         </a>
-        <button 
+        <button
           onClick={() => supabase.auth.signOut().then(() => { setRadioError(false); window.location.href = "/login"; })}
           className="mt-6 py-3 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors text-sm font-medium"
         >
@@ -198,24 +198,24 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
 
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-              {stations.length === 0 ? (
-                <div className="text-center p-8 text-zinc-500">Tidak ada stasiun yang tersedia untuk akunmu.</div>
-              ) : (
-                stations.map(station => (
-                  <button
-                    key={station.id}
-                    onClick={() => setSelectedStation(station)}
-                    className="w-full text-left p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-500/5 transition-all group"
-                  >
-                    <h3 className="font-bold text-lg text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{station.name}</h3>
-                    <p className="text-zinc-500 text-sm line-clamp-2 mt-1">{station.description || station.shortcode}</p>
-                  </button>
-                ))
-              )}
-            </div>
-            
-              <button 
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {stations.length === 0 ? (
+                  <div className="text-center p-8 text-zinc-500">Tidak ada stasiun yang tersedia untuk akunmu.</div>
+                ) : (
+                  stations.map(station => (
+                    <button
+                      key={station.id}
+                      onClick={() => setSelectedStation(station)}
+                      className="w-full text-left p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-500/5 transition-all group"
+                    >
+                      <h3 className="font-bold text-lg text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{station.name}</h3>
+                      <p className="text-zinc-500 text-sm line-clamp-2 mt-1">{station.description || station.shortcode}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+
+              <button
                 onClick={() => supabase.auth.signOut().then(() => window.location.reload())}
                 className="mt-6 w-full py-3 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors text-sm font-medium"
               >
