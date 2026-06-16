@@ -73,7 +73,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
   }
 
   if (pathname === "/") {
-    return <>{children}</>;
+    return <main className="flex-1 w-full">{children}</main>;
   }
 
   if (pathname === "/login") {
