@@ -76,7 +76,7 @@ export default function CompanyProfile() {
             {/* CTA / Login Button */}
             <div className="hidden md:flex items-center space-x-4">
               {isLoggedIn ? (
-                <Link href="/panel" className="px-6 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 flex items-center space-x-2">
+                <Link href="/portal" className="px-6 py-2.5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-all hover:scale-105 active:scale-95 flex items-center space-x-2">
                   <span>Dashboard</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -109,7 +109,7 @@ export default function CompanyProfile() {
             <button onClick={() => scrollToSection("contact")} className="w-full text-left px-4 py-2 text-zinc-900 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg">Contact Us</button>
             <div className="pt-4 px-4">
               {isLoggedIn ? (
-                <Link href="/panel" className="flex justify-center w-full px-6 py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold">
+                <Link href="/portal" className="flex justify-center w-full px-6 py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-semibold">
                   Dashboard
                 </Link>
               ) : (
@@ -424,7 +424,7 @@ export default function CompanyProfile() {
               </a>
               <div className="mt-8">
                 {isLoggedIn ? (
-                  <Link href="/panel" className="inline-block px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-colors">
+                  <Link href="/portal" className="inline-block px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-colors">
                     Akses Dashboard
                   </Link>
                 ) : (

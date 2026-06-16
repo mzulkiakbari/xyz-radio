@@ -24,8 +24,10 @@ BEGIN
   
   IF inv_name IS NOT NULL THEN
     -- Jika ada, otomatis masukkan mereka ke tabel employees sebagai Staff
+    -- Gunakan ON CONFLICT DO NOTHING agar tidak error jika id sudah ada
     INSERT INTO public.employees (id, name, discord_id, division, position, status, is_admin)
-    VALUES (NEW.id, inv_name, did, 'Staff', 'Staff', 'Active', false);
+    VALUES (NEW.id, inv_name, did, 'Staff', 'Staff', 'Active', false)
+    ON CONFLICT (id) DO NOTHING;
     
     -- Hapus antrean invite agar bersih
     DELETE FROM public.employee_invites WHERE discord_id = did;
@@ -35,8 +37,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. Attach the trigger to auth.users
+-- 3. Attach the trigger to auth.users (Menangani pendaftar baru maupun yang login ulang)
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
+  AFTER INSERT OR UPDATE ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_discord_user();
