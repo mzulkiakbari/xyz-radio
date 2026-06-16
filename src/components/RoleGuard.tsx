@@ -31,7 +31,8 @@ export function RoleGuard({ children, allowedDivisions, allowedPositions, requir
 
       if (!session) {
         const host = window.location.host.replace('employee.', '').replace('admin.', '');
-        window.location.href = `${window.location.protocol}//${host}/login`;
+        const nextUrl = encodeURIComponent(window.location.href);
+        window.location.href = `${window.location.protocol}//${host}/login?next=${nextUrl}`;
         return;
       }
 

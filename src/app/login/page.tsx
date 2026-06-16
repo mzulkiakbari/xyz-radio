@@ -11,12 +11,31 @@ export default function LoginPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        router.push("/portal");
+        const searchParams = new URLSearchParams(window.location.search);
+        let nextUrl = searchParams.get("next");
+        
+        if (!nextUrl && typeof window !== 'undefined') {
+          nextUrl = localStorage.getItem('sso_next');
+          if (nextUrl) localStorage.removeItem('sso_next');
+        }
+
+        if (nextUrl && (nextUrl.includes('admin.') || nextUrl.includes('employee.'))) {
+          // Pass the token to the subdomain using the URL hash so Supabase on the subdomain can read it
+          window.location.href = `${nextUrl}#access_token=${session.access_token}&refresh_token=${session.refresh_token}&expires_in=${session.expires_in || 3600}&token_type=bearer&type=magiclink`;
+        } else {
+          router.push("/portal");
+        }
       }
     });
   }, [router]);
 
   const handleDiscordLogin = async () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const nextUrl = searchParams.get("next");
+    if (nextUrl && typeof window !== 'undefined') {
+      localStorage.setItem('sso_next', nextUrl);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
       options: {
