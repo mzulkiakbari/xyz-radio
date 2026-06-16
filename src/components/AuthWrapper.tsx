@@ -56,6 +56,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           }
         } catch (err) {
           setRadioError(true);
+        }
       }
 
       setIsLoading(false);
