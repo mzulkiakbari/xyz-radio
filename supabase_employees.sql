@@ -20,15 +20,23 @@ CREATE POLICY "Users can view own employee record."
   ON public.employees FOR SELECT 
   USING ( auth.uid() = id );
 
+-- Function to check if user is HR or Exec (Security Definer bypasses RLS to prevent infinite recursion)
+CREATE OR REPLACE FUNCTION public.is_hr_or_exec()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.employees
+    WHERE id = auth.uid() 
+    AND (position IN ('CEO', 'CFO', 'CMO', 'COO', 'CTO', 'Co-CEO') OR division = 'HR')
+  );
+$$;
+
 -- Allow Direksi or HR to view all employee records
 CREATE POLICY "HR and Direksi can view all employee records." 
   ON public.employees FOR SELECT 
-  USING ( 
-    EXISTS (
-      SELECT 1 FROM public.employees e 
-      WHERE e.id = auth.uid() AND (e.position IN ('CEO', 'CFO', 'CMO', 'COO', 'CTO', 'Co-CEO') OR e.division = 'HR')
-    )
-  );
+  USING ( public.is_hr_or_exec() );
 
 -- Function to handle updating the updated_at column
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
