@@ -12,6 +12,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [radioError, setRadioError] = useState(false);
   
   const { stations, setStations, selectedStation, setSelectedStation } = useStation();
   
@@ -20,9 +21,15 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       const isPublicRoute = pathname === "/" || pathname === "/login";
+      const isEmployeeOrAdmin = pathname.startsWith("/employee") || pathname.startsWith("/admin");
+
+      if (isEmployeeOrAdmin) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         if (!isPublicRoute) router.push("/login");
@@ -30,12 +37,11 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // User logged in to Supabase. Check AzuraCast.
-      if (!isAuthenticated) {
+      if (pathname.startsWith("/panel") && !isAuthenticated) {
         const email = session.user.email;
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-          const res = await fetch(`${backendUrl}/api/azuracast/login`, {
+          const res = await fetch(`${backendUrl}/api/radio/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
@@ -45,19 +51,16 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           if (json.success) {
             setStations(json.data);
             setIsAuthenticated(true);
-            if (pathname === "/login") router.push("/panel");
           } else {
-            // Not registered in Azuracast
-            await supabase.auth.signOut();
-            setAuthError(json.error);
-            router.push("/login");
+            setRadioError(true);
           }
         } catch (err) {
-          setAuthError("Gagal terhubung ke Backend Server.");
-          await supabase.auth.signOut();
-          router.push("/login");
+          setRadioError(true);
         }
+      } else if (pathname === "/login") {
+        router.push("/panel");
       }
+      
       setIsLoading(false);
     };
 
@@ -72,8 +75,29 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (pathname === "/") {
-    return <main className="flex-1 w-full">{children}</main>;
+  if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname === "/") {
+    return <main className="flex-1 w-full h-full">{children}</main>;
+  }
+
+  if (radioError) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
+        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Akses Ditolak</h1>
+        <p className="text-zinc-500 text-center max-w-md mb-6">
+          Anda tidak memiliki izin ke panel radio. Jika anda sudah memesan silahkan beritahu tim marketing secara Private Message atau order radio kalau belum ada.
+        </p>
+        <a href="https://bit.ly/XYZCo" target="_blank" rel="noreferrer" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
+          Hubungi via Discord
+        </a>
+        <button 
+          onClick={() => supabase.auth.signOut().then(() => { setRadioError(false); window.location.href = "/login"; })}
+          className="mt-6 py-3 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors text-sm font-medium"
+        >
+          Sign out / Ganti Akun
+        </button>
+      </div>
+    );
   }
 
   if (pathname === "/login") {
