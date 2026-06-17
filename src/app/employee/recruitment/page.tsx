@@ -23,8 +23,6 @@ export default function RecruitmentPage() {
 
   // Format Modal State
   const [applyMessage, setApplyMessage] = useState("");
-  const [modalTitle, setModalTitle] = useState("Formulir Pendaftaran");
-  const [customInputs, setCustomInputs] = useState<{label: string, placeholder: string}[]>([]);
   const [isSavingFormat, setIsSavingFormat] = useState(false);
 
   useEffect(() => {
@@ -57,8 +55,6 @@ export default function RecruitmentPage() {
       }
       if (settingsData) {
         setApplyMessage(settingsData.apply_message?.content || "");
-        setModalTitle(settingsData.modal_title || "Formulir Pendaftaran");
-        setCustomInputs(settingsData.custom_inputs || []);
       }
     } catch (err) {
       console.error(err);
@@ -148,8 +144,6 @@ export default function RecruitmentPage() {
       const { error } = await supabase.from("recruitment_settings").upsert({
         id: 1,
         apply_message: { content: applyMessage },
-        modal_title: modalTitle,
-        custom_inputs: customInputs
       });
 
       if (error) throw error;
@@ -176,21 +170,6 @@ export default function RecruitmentPage() {
     setIsSavingFormat(false);
   };
 
-  const addCustomInput = () => {
-    if (customInputs.length >= 3) return toast.error("Maksimal 3 input custom (Total 5 termasuk Nama & Divisi).");
-    setCustomInputs([...customInputs, { label: "", placeholder: "" }]);
-  };
-
-  const updateCustomInput = (index: number, key: string, value: string) => {
-    const newInputs = [...customInputs];
-    newInputs[index] = { ...newInputs[index], [key]: value };
-    setCustomInputs(newInputs);
-  };
-
-  const removeCustomInput = (index: number) => {
-    setCustomInputs(customInputs.filter((_, i) => i !== index));
-  };
-
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -213,7 +192,7 @@ export default function RecruitmentPage() {
             onClick={() => setIsFormatModalOpen(true)}
             className="px-5 py-2.5 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-bold uppercase tracking-widest text-[11px] rounded-xl transition-all flex items-center gap-2"
           >
-            <Settings className="w-4 h-4" /> Apply Form Format
+            <Settings className="w-4 h-4" /> Apply Format (Ticket)
           </button>
           
           {isRecruitmentOpen ? (
@@ -344,20 +323,19 @@ export default function RecruitmentPage() {
         </div>
       )}
 
-      {/* Modal Format Form */}
+      {/* Modal Format Form (Simplified) */}
       {isFormatModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
             <div className="px-6 py-4 border-b border-zinc-200 dark:border-white/10 flex items-center justify-between shrink-0">
-              <h3 className="font-black text-sm uppercase tracking-widest text-zinc-900 dark:text-white">Set Apply Form & Modal</h3>
+              <h3 className="font-black text-sm uppercase tracking-widest text-zinc-900 dark:text-white">Pengaturan Apply Format</h3>
               <button onClick={() => setIsFormatModalOpen(false)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 space-y-6 overflow-y-auto">
-              {/* Message Setup */}
+            <div className="p-6 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Pesan Pengantar (Discord)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Pesan Pengantar di Discord</label>
                 <textarea 
                   value={applyMessage} 
                   onChange={(e) => setApplyMessage(e.target.value)} 
@@ -365,60 +343,8 @@ export default function RecruitmentPage() {
                   className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors min-h-[100px] resize-none" 
                 />
               </div>
-
-              {/* Modal Setup */}
-              <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-white/10">
-                <div className="space-y-1">
-                  <h4 className="font-black text-xs uppercase tracking-widest text-zinc-900 dark:text-white">Discord Modal Setup</h4>
-                  <p className="text-[10px] font-bold text-zinc-500">Maksimal 5 Input. Input "Nama" dan "Divisi" sudah otomatis ditambahkan (Wajib).</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Judul Modal</label>
-                  <input type="text" value={modalTitle} onChange={(e) => setModalTitle(e.target.value)} placeholder="Formulir Pendaftaran" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
-                </div>
-
-                {/* Fixed Inputs */}
-                <div className="grid grid-cols-2 gap-4 opacity-70">
-                  <div className="p-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
-                    <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Input 1: Nama Lengkap</p>
-                    <p className="text-[10px] font-medium text-zinc-500">(Otomatis Terkunci)</p>
-                  </div>
-                  <div className="p-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
-                    <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Input 2: Divisi</p>
-                    <p className="text-[10px] font-medium text-zinc-500">(Otomatis Terkunci)</p>
-                  </div>
-                </div>
-
-                {/* Custom Inputs */}
-                <div className="space-y-3">
-                  {customInputs.map((input, index) => (
-                    <div key={index} className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-white/10">
-                      <div className="w-6 h-6 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-500">
-                        {index + 3}
-                      </div>
-                      <input 
-                        type="text" 
-                        value={input.label} 
-                        onChange={(e) => updateCustomInput(index, "label", e.target.value)} 
-                        placeholder="Label Pertanyaan" 
-                        className="flex-1 bg-transparent border-none text-sm outline-none font-medium text-zinc-900 dark:text-white" 
-                      />
-                      <button onClick={() => removeCustomInput(index)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  
-                  {customInputs.length < 3 && (
-                    <button 
-                      onClick={addCustomInput}
-                      className="w-full p-4 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-primary dark:hover:border-primary text-zinc-500 hover:text-primary transition-colors flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest"
-                    >
-                      <Plus className="w-4 h-4" /> Tambah Input Custom
-                    </button>
-                  )}
-                </div>
+              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 font-medium">
+                Pesan form statis otomatis dikirimkan oleh bot melalui sistem tiket setelah pelamar menekan tombol Apply.
               </div>
             </div>
             <div className="p-6 border-t border-zinc-200 dark:border-white/10 flex justify-end shrink-0">
