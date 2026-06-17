@@ -277,16 +277,16 @@ export default function RecruitmentPage() {
             <div className="p-6 space-y-5">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Batch</label>
-                <input type="text" value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="Contoh: 15" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
+                <input type="text" value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="Contoh: 15" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Start Date</label>
-                  <input type="text" value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="10 Sept 2026" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="10 Sept 2026" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">End Date</label>
-                  <input type="text" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="20 Sept 2026" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="20 Sept 2026" className="w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
               <div className="space-y-3 pt-2">
@@ -340,7 +340,7 @@ export default function RecruitmentPage() {
                   value={applyMessage} 
                   onChange={(e) => setApplyMessage(e.target.value)} 
                   placeholder="Klik tombol Apply di bawah untuk mendaftar..." 
-                  className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors min-h-[100px] resize-none" 
+                  className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/10 text-sm outline-none focus:border-primary transition-colors min-h-[100px] resize-none" 
                 />
               </div>
               <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 font-medium">

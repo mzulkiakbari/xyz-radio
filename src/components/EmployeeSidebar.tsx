@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Briefcase, 
-  Users, 
-  Megaphone, 
+import {
+  Briefcase,
+  Users,
+  Megaphone,
   Settings,
   Menu,
   X,
@@ -17,7 +17,7 @@ const employeeMenuItems = [
   { icon: Briefcase, label: "Employee Dashboard", href: "/employee" },
   { icon: Megaphone, label: "Marketing", href: "/employee/marketing" },
   { icon: Users, label: "HR System", href: "/employee/hr" },
-  { icon: FileText, label: "Recruitment", href: "/employee/hr/recruitment" },
+  { icon: FileText, label: "Recruitment", href: "/employee/recruitment" },
 ];
 
 function EmployeeSidebarContent({ onClose }: { onClose?: () => void }) {
@@ -59,8 +59,8 @@ function EmployeeSidebarContent({ onClose }: { onClose?: () => void }) {
               href={item.href}
               onClick={onClose}
               className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group
-                ${isActive 
-                  ? "bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-500 font-semibold" 
+                ${isActive
+                  ? "bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-500 font-semibold"
                   : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                 }
               `}
@@ -83,7 +83,7 @@ export function EmployeeSidebar() {
       <div className="md:hidden flex items-center justify-between bg-white dark:bg-black border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-             <Users className="w-5 h-5 text-white" />
+            <Users className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-zinc-900 dark:text-white">Employee Portal</span>
         </div>
