@@ -141,10 +141,9 @@ export default function RecruitmentPage() {
     setIsSavingFormat(true);
     try {
       // 1. Update Supabase
-      const { error } = await supabase.from("recruitment_settings").upsert({
-        id: 1,
+      const { error } = await supabase.from("recruitment_settings").update({
         apply_message: { content: applyMessage },
-      });
+      }).eq("id", 1);
 
       if (error) throw error;
 
