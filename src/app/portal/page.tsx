@@ -22,7 +22,7 @@ export default function PortalPage() {
       }
 
       try {
-        const { data, error } = await supabase.from('employees').select('is_admin, status').eq('id', session.user.id).single();
+        const { data, error } = await supabase.from('employees').select('is_admin, status').eq('id', session.user.id).maybeSingle();
         
         if (error) {
            console.error("Supabase Error:", error);
@@ -35,8 +35,8 @@ export default function PortalPage() {
           setPortalOptions({ isEmployee: true, isAdmin: data.is_admin });
           setIsLoading(false);
         } else {
-          setErrorMsg(`Data ditemukan, tapi status bukan 'Active' (Status saat ini: ${data?.status || 'Tidak ada/Null'})`);
-          setIsLoading(false);
+          // Jika bukan karyawan aktif, langsung ke panel radio
+          router.push("/panel");
         }
       } catch (err: any) {
         console.error("Catch Error:", err);
