@@ -58,30 +58,34 @@ export default function BroadcastPage() {
       
       let playing = false;
       let activeChanId = "";
-      if (statusJson && statusJson.success && statusJson.activeChannels && statusJson.activeChannels.length > 0) {
-          playing = true;
-          activeChanId = statusJson.activeChannels[0];
-      }
+      const activeChannelsGlobal: string[] = (statusJson?.success && statusJson?.activeChannels) ? statusJson.activeChannels : [];
       
       if (json.success) {
         setGuilds(json.data);
+
         if (json.data.length > 0) {
-          if (playing && activeChanId) {
-            let foundGuild = json.data.find((g: Guild) => g.voiceChannels.some(c => c.id === activeChanId));
+          // Cek apakah ada channel aktif yang ada di server milik user ini
+          // Kalau channel aktif ada di server lain (bukan milik user), jangan dianggap On Air
+          for (const chanId of activeChannelsGlobal) {
+            const foundGuild = json.data.find((g: Guild) => g.voiceChannels.some(c => c.id === chanId));
             if (foundGuild) {
+              playing = true;
+              activeChanId = chanId;
               setSelectedGuildId(foundGuild.id);
-              setSelectedChannelId(activeChanId);
-            } else {
-              setSelectedGuildId(json.data[0].id);
-              if (json.data[0].voiceChannels.length > 0) setSelectedChannelId(json.data[0].voiceChannels[0].id);
+              setSelectedChannelId(chanId);
+              break;
             }
-          } else {
+          }
+
+          // Jika tidak ada yang on air di server user, pilih default pertama
+          if (!playing) {
             setSelectedGuildId(json.data[0].id);
             if (json.data[0].voiceChannels.length > 0) {
               setSelectedChannelId(json.data[0].voiceChannels[0].id);
             }
           }
         }
+
         setIsPlaying(playing);
       } else {
         setError(json.error || "Gagal memuat daftar server.");
