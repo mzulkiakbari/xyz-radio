@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Play, Square, Settings2, Mic2, AlertCircle, RefreshCw } from "lucide-react";
 import { useStation } from "@/components/StationContext";
+import { supabase } from "@/lib/supabase";
 
 type VoiceChannel = {
   id: string;
@@ -38,8 +39,17 @@ export default function BroadcastPage() {
     setIsLoadingChannels(true);
     setError(null);
     try {
+      // Ambil Discord ID dari session (provider_id dari OAuth Discord)
+      const { data: { session } } = await supabase.auth.getSession();
+      const discordIdentity = session?.user?.identities?.find(i => i.provider === 'discord');
+      const discordId = discordIdentity?.id || "";
+
+      const channelUrl = discordId
+        ? `${backendUrl}/api/bot/channels?discordId=${discordId}`
+        : `${backendUrl}/api/bot/channels`;
+
       const [resChannels, resStatus] = await Promise.all([
-        fetch(`${backendUrl}/api/bot/channels`),
+        fetch(channelUrl),
         fetch(`${backendUrl}/api/bot/status`).catch(() => null)
       ]);
       
