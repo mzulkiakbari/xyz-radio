@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2 } from "lucide-react";
 import { useStation } from "@/components/StationContext";
 
 type MediaFile = {
@@ -22,6 +22,24 @@ export default function MediaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
+  const [editingMedia, setEditingMedia] = useState<MediaFile | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [deletingMedia, setDeletingMedia] = useState<MediaFile | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Tutup dropdown saat klik di luar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpenId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [ytUrl, setYtUrl] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
@@ -54,6 +72,67 @@ export default function MediaPage() {
 
     fetchMedia();
   }, [selectedStation]);
+
+  const reloadMedia = async () => {
+    if (!selectedStation) return;
+    setIsLoading(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
+      const json = await res.json();
+      if (json.success) setMediaFiles(json.data || []);
+    } catch (err) {} finally { setIsLoading(false); }
+  };
+
+  const handleEditSave = async () => {
+    if (!selectedStation || !editingMedia || !editTitle.trim()) return;
+    setIsProcessing(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${editingMedia.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editTitle })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSuccessToast("Judul lagu berhasil diperbarui!");
+        setTimeout(() => setSuccessToast(""), 3000);
+        setEditingMedia(null);
+        reloadMedia();
+      } else {
+        alert("Gagal mengupdate judul: " + (json.error || "Unknown error"));
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedStation || !deletingMedia) return;
+    setIsProcessing(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${deletingMedia.id}`, {
+        method: "DELETE"
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSuccessToast("Lagu berhasil dihapus!");
+        setTimeout(() => setSuccessToast(""), 3000);
+        setDeletingMedia(null);
+        reloadMedia();
+      } else {
+        alert("Gagal menghapus lagu: " + (json.error || "Unknown error"));
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleDownload = async () => {
     if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
@@ -108,16 +187,7 @@ export default function MediaPage() {
       }
 
       if (isSuccess) {
-        // Reload list media setelah berhasil
-        const fetchMedia = async () => {
-          setIsLoading(true);
-          try {
-            const mediaRes = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
-            const json = await mediaRes.json();
-            if (json.success) setMediaFiles(json.data || []);
-          } catch (err) {} finally { setIsLoading(false); }
-        };
-        fetchMedia();
+        reloadMedia();
       }
     } catch (err) {
       alert("Error: " + err);
@@ -208,10 +278,41 @@ export default function MediaPage() {
                 <div className="col-span-4 md:col-span-2 text-right text-zinc-500 dark:text-zinc-400 font-medium transition-colors duration-300">
                   {file.length_text || "--:--"}
                 </div>
-                <div className="col-span-2 md:col-span-1 flex justify-end">
-                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <div className="col-span-2 md:col-span-1 flex justify-end relative">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDropdownOpenId(dropdownOpenId === file.id ? null : file.id);
+                    }}
+                    className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
                     <MoreVertical className="w-5 h-5" />
                   </button>
+                  {dropdownOpenId === file.id && (
+                    <div ref={dropdownRef} className="absolute right-0 top-10 w-48 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 z-10 animate-in fade-in slide-in-from-top-2">
+                      <button 
+                        onClick={() => {
+                          setEditTitle(file.title || file.text || "");
+                          setEditingMedia(file);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center space-x-2"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>Edit Title</span>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setDeletingMedia(file);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -311,6 +412,86 @@ export default function MediaPage() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingMedia && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl transition-colors duration-300">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Edit Media Title</h2>
+              <button onClick={() => setEditingMedia(null)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-300">Title</label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                disabled={isProcessing}
+                className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50 mb-6"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setEditingMedia(null)}
+                  disabled={isProcessing}
+                  className="px-5 py-2.5 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  disabled={isProcessing || !editTitle.trim()}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-900/50 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingMedia && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl transition-colors duration-300">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-red-600 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Hapus Media
+              </h2>
+              <button onClick={() => setDeletingMedia(null)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-zinc-600 dark:text-zinc-300 mb-6">
+                Apakah Anda yakin ingin menghapus <strong>{deletingMedia.title || deletingMedia.text || deletingMedia.path}</strong>? Tindakan ini tidak dapat dibatalkan.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeletingMedia(null)}
+                  disabled={isProcessing}
+                  className="px-5 py-2.5 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isProcessing}
+                  className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-900/50 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Ya, Hapus
+                </button>
+              </div>
             </div>
           </div>
         </div>
