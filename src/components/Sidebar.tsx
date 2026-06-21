@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -18,7 +18,6 @@ import { useStation } from "./StationContext";
 const menuItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/panel" },
   { icon: ListMusic, label: "Media", href: "/panel/media" },
-  { icon: Podcast, label: "Podcast", href: "/panel/podcast" },
   { icon: Radio, label: "Discord Bot", href: "/panel/discord-bot" },
   { icon: Settings, label: "Settings", href: "/panel/settings" },
 ];
@@ -26,6 +25,26 @@ const menuItems = [
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { selectedStation } = useStation();
+  const [hasStreamer, setHasStreamer] = useState(false);
+
+  useEffect(() => {
+    if (!selectedStation) return;
+    fetch(`/api/azuracast/stations/${selectedStation.id}/streamers`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data && json.data.length > 0) {
+          setHasStreamer(true);
+        } else {
+          setHasStreamer(false);
+        }
+      })
+      .catch(() => setHasStreamer(false));
+  }, [selectedStation]);
+
+  const dynamicMenuItems = [...menuItems];
+  if (hasStreamer) {
+    dynamicMenuItems.splice(2, 0, { icon: Podcast, label: "Web DJ", href: "/panel/podcast" });
+  }
 
   return (
     <>
@@ -51,7 +70,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-        {menuItems.map((item) => {
+        {dynamicMenuItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
 
