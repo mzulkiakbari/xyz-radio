@@ -47,6 +47,11 @@ export default function MediaPage() {
   const [statusText, setStatusText] = useState("");
   const [successToast, setSuccessToast] = useState("");
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploadingLocal, setIsUploadingLocal] = useState(false);
+  const [localUploadProgress, setLocalUploadProgress] = useState(0);
+
   useEffect(() => {
     if (!selectedStation) return;
 
@@ -195,6 +200,70 @@ export default function MediaPage() {
       setIsDownloading(false);
       setDownloadProgress(0);
       setStatusText("");
+    }
+  };
+
+  const handleLocalUpload = async (file: File) => {
+    if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
+    if (!file.type.startsWith('audio/')) {
+      return alert("Hanya file audio yang diizinkan!");
+    }
+
+    setIsUploadingLocal(true);
+    setLocalUploadProgress(0);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const result = e.target?.result as string;
+        if (!result) return;
+        
+        // Extract base64
+        const base64Data = result.split(',')[1];
+        
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        
+        // Simulasikan progress (karena XMLHttpRequest native susah di hook dengan fetch)
+        const progressInterval = setInterval(() => {
+          setLocalUploadProgress(prev => {
+            if (prev >= 90) return prev;
+            return prev + 10;
+          });
+        }, 300);
+
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            path: file.name.replace(/\s+/g, '_'), 
+            file: base64Data 
+          })
+        });
+
+        clearInterval(progressInterval);
+        
+        const json = await res.json();
+        if (json.success) {
+          setLocalUploadProgress(100);
+          setSuccessToast("File audio berhasil diupload!");
+          setTimeout(() => setSuccessToast(""), 5000);
+          setIsUploadModalOpen(false);
+          reloadMedia();
+        } else {
+          alert(`Gagal upload file: ${json.error}`);
+        }
+        setIsUploadingLocal(false);
+      };
+      
+      reader.onerror = () => {
+        alert("Gagal membaca file");
+        setIsUploadingLocal(false);
+      };
+
+      reader.readAsDataURL(file);
+    } catch (err) {
+      alert("Error: " + err);
+      setIsUploadingLocal(false);
     }
   };
 
@@ -352,13 +421,53 @@ export default function MediaPage() {
               </div>
 
               {activeTab === "local" && (
-                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-blue-500 dark:hover:border-blue-500 bg-zinc-50 dark:bg-black/50 rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group">
-                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <FileAudio className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white transition-colors duration-300">Click to Browse</h3>
-                  <p className="text-zinc-500 text-sm">or drag and drop audio files here</p>
-                  <p className="text-zinc-400 dark:text-zinc-600 text-xs mt-4 transition-colors duration-300">Supports MP3, WAV, FLAC</p>
+                <div 
+                  className={`border-2 border-dashed ${isDragging ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-black/50"} hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group`}
+                  onClick={() => !isUploadingLocal && fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (!isUploadingLocal && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                      handleLocalUpload(e.dataTransfer.files[0]);
+                    }
+                  }}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="audio/*" 
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        handleLocalUpload(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  {isUploadingLocal ? (
+                    <div className="flex flex-col items-center space-y-4 w-full">
+                      <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                      <div className="w-full max-w-xs">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">Uploading...</span>
+                          <span className="font-bold text-blue-500">{localUploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
+                          <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${localUploadProgress}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <FileAudio className="w-8 h-8 text-blue-500" />
+                      </div>
+                      <h3 className="font-bold text-lg mb-1 text-zinc-900 dark:text-white transition-colors duration-300">Click to Browse</h3>
+                      <p className="text-zinc-500 text-sm">or drag and drop audio files here</p>
+                      <p className="text-zinc-400 dark:text-zinc-600 text-xs mt-4 transition-colors duration-300">Supports MP3, WAV, FLAC, M4A, OGG</p>
+                    </>
+                  )}
                 </div>
               )}
 
