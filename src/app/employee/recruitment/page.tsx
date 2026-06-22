@@ -25,11 +25,7 @@ export default function RecruitmentPage() {
   const [applyMessage, setApplyMessage] = useState("");
   const [isSavingFormat, setIsSavingFormat] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  async function fetchData() {
     setIsLoading(true);
     try {
       const { data: appsData } = await supabase
@@ -59,9 +55,14 @@ export default function RecruitmentPage() {
     } catch (err) {
       console.error(err);
       toast.error("Gagal memuat data");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  };
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {

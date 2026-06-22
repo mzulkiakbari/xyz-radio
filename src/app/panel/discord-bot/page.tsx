@@ -35,7 +35,7 @@ export default function BroadcastPage() {
     fetchChannels();
   }, []);
 
-  const fetchChannels = async () => {
+  async function fetchChannels() {
     setIsLoadingChannels(true);
     setError(null);
     try {
