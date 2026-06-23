@@ -208,6 +208,10 @@ export default function MediaPage() {
     if (!file.type.startsWith('audio/')) {
       return alert("Hanya file audio yang diizinkan!");
     }
+    // Batasan ukuran file (20MB) yang setara dengan durasi 10-15 menit untuk menghemat RAM
+    if (file.size > 20 * 1024 * 1024) {
+      return alert("Ukuran file terlalu besar! Maksimal ukuran file adalah 20MB (setara dengan ~10 menit lagu).");
+    }
 
     setIsUploadingLocal(true);
     setLocalUploadProgress(0);
