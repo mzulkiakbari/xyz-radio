@@ -8,6 +8,7 @@ export type Station = {
   shortcode: string;
   description: string;
   public_player_url: string;
+  serverUrl?: string;
   // ...other fields
 };
 

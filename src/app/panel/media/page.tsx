@@ -60,7 +60,7 @@ export default function MediaPage() {
       setError(null);
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
         const json = await res.json();
         
         if (json.success) {
@@ -83,7 +83,7 @@ export default function MediaPage() {
     setIsLoading(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media`);
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
       const json = await res.json();
       if (json.success) setMediaFiles(json.data || []);
     } catch (err) {} finally { setIsLoading(false); }
@@ -94,7 +94,7 @@ export default function MediaPage() {
     setIsProcessing(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${editingMedia.id}`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${editingMedia.id}?s=${selectedStation.serverUrl}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: editTitle })
@@ -120,7 +120,7 @@ export default function MediaPage() {
     setIsProcessing(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${deletingMedia.id}`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${deletingMedia.id}?s=${selectedStation.serverUrl}`, {
         method: "DELETE"
       });
       const json = await res.json();
@@ -235,7 +235,7 @@ export default function MediaPage() {
           });
         }, 300);
 
-        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/upload`, {
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/upload?s=${selectedStation.serverUrl}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 

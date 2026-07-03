@@ -23,7 +23,7 @@ export default function OverviewPage() {
     const fetchStats = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/nowplaying`);
+        const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/nowplaying?s=${selectedStation.serverUrl || ''}`);
         const json = await res.json();
         
         if (json.success && json.data) {

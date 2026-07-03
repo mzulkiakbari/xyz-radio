@@ -8,8 +8,14 @@ export async function GET(request: Request) {
     return new NextResponse("Missing Radio ID", { status: 400 });
   }
 
-  // Ambil RADIO_API_URL dari environment
-  const RADIO_API_URL = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+  const serverParam = searchParams.get("s");
+
+  // Ambil RADIO_API_URL dari environment atau parameter s
+  let rawServerUrl = serverParam || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+  if (!rawServerUrl.startsWith("http")) {
+    rawServerUrl = `https://${rawServerUrl}`;
+  }
+  const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
 
   try {
     // Ambil detail stasiun radio dari public API Azuracast

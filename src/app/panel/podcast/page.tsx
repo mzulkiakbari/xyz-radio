@@ -24,7 +24,7 @@ export default function PodcastPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/azuracast/stations/${selectedStation.id}/streamers`);
+        const res = await fetch(`/api/azuracast/stations/${selectedStation.id}/streamers?s=${selectedStation.serverUrl}`);
         const json = await res.json();
         
         if (json.success) {

@@ -121,7 +121,7 @@ export default function BroadcastPage() {
       if (!isPlaying) {
         // Start Broadcast
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-        const streamUrl = selectedStation ? `${appUrl}/radio?id=${selectedStation.id}` : `${appUrl}/radio?id=...`;
+        const streamUrl = selectedStation ? `${appUrl}/radio?id=${selectedStation.id}&s=${selectedStation.serverUrl || ''}` : `${appUrl}/radio?id=...`;
 
         const res = await fetch(`${backendUrl}/api/bot/play`, {
           method: "POST",
@@ -129,7 +129,8 @@ export default function BroadcastPage() {
           body: JSON.stringify({ 
             channelIds: [selectedChannelId],
             streamUrl: streamUrl,
-            stationId: selectedStation ? selectedStation.id : null
+            stationId: selectedStation ? selectedStation.id : null,
+            serverUrl: selectedStation ? selectedStation.serverUrl : null
           })
         });
         const json = await res.json();

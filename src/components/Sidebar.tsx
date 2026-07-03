@@ -29,7 +29,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   useEffect(() => {
     if (!selectedStation) return;
-    fetch(`/api/azuracast/stations/${selectedStation.id}/streamers`)
+    fetch(`/api/azuracast/stations/${selectedStation.id}/streamers?s=${selectedStation.serverUrl}`)
       .then(res => res.json())
       .then(json => {
         if (json.success && json.data && json.data.length > 0) {
