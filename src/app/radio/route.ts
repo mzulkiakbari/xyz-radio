@@ -11,7 +11,16 @@ export async function GET(request: Request) {
   const serverParam = searchParams.get("s");
 
   // Ambil RADIO_API_URL dari environment atau parameter s
-  let rawServerUrl = serverParam || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+  let rawServerUrl = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+  
+  if (serverParam) {
+    if (serverParam === "s1" && process.env.RADIO2_API_URL) {
+      rawServerUrl = process.env.RADIO2_API_URL;
+    } else {
+      rawServerUrl = serverParam;
+    }
+  }
+
   if (!rawServerUrl.startsWith("http")) {
     rawServerUrl = `https://${rawServerUrl}`;
   }
