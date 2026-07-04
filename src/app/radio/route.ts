@@ -12,10 +12,12 @@ export async function GET(request: Request) {
 
   // Ambil RADIO_API_URL dari environment atau parameter s
   let rawServerUrl = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
-  
+
   if (serverParam) {
-    if (serverParam === "s1" && process.env.RADIO2_API_URL) {
-      rawServerUrl = process.env.RADIO2_API_URL;
+    if (serverParam === "s1") {
+      rawServerUrl = process.env.RADIO2_API_URL || "https://s1.radio.xyz-sa.site";
+    } else if (!serverParam.includes(".")) {
+      rawServerUrl = `${serverParam}.radio.xyz-sa.site`;
     } else {
       rawServerUrl = serverParam;
     }
