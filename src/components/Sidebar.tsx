@@ -10,6 +10,7 @@ import {
   Settings,
   Headphones,
   Podcast,
+  Megaphone,
   Menu,
   X
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { useStation } from "./StationContext";
 const menuItems = [
   { icon: LayoutDashboard, label: "Overview", href: "/panel" },
   { icon: ListMusic, label: "Media", href: "/panel/media" },
+  { icon: Megaphone, label: "Jingles & Ads", href: "/panel/jingles" },
   { icon: Radio, label: "Discord Bot", href: "/panel/discord-bot" },
   { icon: Settings, label: "Settings", href: "/panel/settings" },
 ];

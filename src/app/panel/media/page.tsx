@@ -29,6 +29,11 @@ export default function MediaPage() {
   const [editTitle, setEditTitle] = useState("");
   const [deletingMedia, setDeletingMedia] = useState<MediaFile | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const [selectedMediaIds, setSelectedMediaIds] = useState<string[]>([]);
+  const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Tutup dropdown saat klik di luar
@@ -87,6 +92,7 @@ export default function MediaPage() {
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
       const json = await res.json();
       if (json.success) setMediaFiles(json.data || []);
+      setSelectedMediaIds([]);
     } catch (err) {} finally { setIsLoading(false); }
   };
 
@@ -137,6 +143,48 @@ export default function MediaPage() {
       toast.error("Error: " + err);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleBatchDeleteConfirm = async () => {
+    if (!selectedStation || selectedMediaIds.length === 0) return;
+    setIsBatchDeleting(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      
+      let successCount = 0;
+      let failCount = 0;
+
+      await Promise.all(
+        selectedMediaIds.map(async (id) => {
+          try {
+            const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${id}?s=${selectedStation.serverUrl}`, {
+              method: "DELETE"
+            });
+            const json = await res.json();
+            if (json.success) successCount++;
+            else failCount++;
+          } catch (err) {
+            failCount++;
+          }
+        })
+      );
+
+      if (successCount > 0) {
+        setSuccessToast(`${successCount} lagu berhasil dihapus!`);
+        setTimeout(() => setSuccessToast(""), 3000);
+      }
+      if (failCount > 0) {
+        toast.error(`${failCount} lagu gagal dihapus.`);
+      }
+
+      setShowBatchDeleteConfirm(false);
+      setSelectedMediaIds([]);
+      reloadMedia();
+    } catch(err) {
+      toast.error("Error: " + err);
+    } finally {
+      setIsBatchDeleting(false);
     }
   };
 
@@ -316,10 +364,40 @@ export default function MediaPage() {
         </div>
       )}
 
+      {/* Batch Action Bar */}
+      {selectedMediaIds.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-4 mb-6 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+            <span className="font-semibold">{selectedMediaIds.length} item dipilih</span>
+          </div>
+          <button
+            onClick={() => setShowBatchDeleteConfirm(true)}
+            className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Trash2 className="w-4 h-4" />
+            Hapus Terpilih
+          </button>
+        </div>
+      )}
+
       {/* Media List */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-none transition-colors duration-300">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm dark:shadow-none transition-colors duration-300">
         <div className="grid grid-cols-12 gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider transition-colors duration-300">
-          <div className="col-span-6 md:col-span-5">File / Title</div>
+          <div className="col-span-6 md:col-span-5 flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              checked={filteredMedia.length > 0 && selectedMediaIds.length === filteredMedia.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedMediaIds(filteredMedia.map(m => m.id));
+                } else {
+                  setSelectedMediaIds([]);
+                }
+              }}
+              className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-blue-500 dark:bg-zinc-800 cursor-pointer"
+            />
+            <span>File / Title</span>
+          </div>
           <div className="hidden md:block col-span-4">Artist</div>
           <div className="col-span-4 md:col-span-2 text-right">Duration</div>
           <div className="col-span-2 md:col-span-1 text-right">Actions</div>
@@ -336,8 +414,21 @@ export default function MediaPage() {
         ) : (
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50 transition-colors duration-300">
             {filteredMedia.map((file, i) => (
-              <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
-                <div className="col-span-6 md:col-span-5 flex items-center space-x-4">
+              <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group last:rounded-b-2xl">
+                <div className="col-span-6 md:col-span-5 flex items-center space-x-3">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedMediaIds.includes(file.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMediaIds(prev => [...prev, file.id]);
+                      } else {
+                        setSelectedMediaIds(prev => prev.filter(id => id !== file.id));
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-blue-600 focus:ring-blue-500 dark:bg-zinc-800 cursor-pointer flex-shrink-0"
+                  />
                   <button className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-blue-500 text-zinc-400 dark:text-zinc-500 group-hover:text-white transition-colors flex-shrink-0">
                     <Play className="w-4 h-4 fill-current ml-0.5" />
                   </button>
@@ -363,7 +454,7 @@ export default function MediaPage() {
                     <MoreVertical className="w-5 h-5" />
                   </button>
                   {dropdownOpenId === file.id && (
-                    <div ref={dropdownRef} className="absolute right-0 top-10 w-48 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 z-10 animate-in fade-in slide-in-from-top-2">
+                    <div ref={dropdownRef} className="absolute right-0 top-10 w-48 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 z-50 animate-in fade-in slide-in-from-top-2">
                       <button 
                         onClick={() => {
                           setEditTitle(file.title || file.text || "");
@@ -604,6 +695,45 @@ export default function MediaPage() {
                 >
                   {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
                   Ya, Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Delete Confirmation Modal */}
+      {showBatchDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/80 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl transition-colors duration-300">
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+              <h2 className="text-xl font-bold text-red-600 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Hapus {selectedMediaIds.length} Media
+              </h2>
+              <button onClick={() => setShowBatchDeleteConfirm(false)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                ✕
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-zinc-600 dark:text-zinc-300 mb-6">
+                Apakah Anda yakin ingin menghapus <strong>{selectedMediaIds.length}</strong> media yang dipilih? Tindakan ini tidak dapat dibatalkan.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowBatchDeleteConfirm(false)}
+                  disabled={isBatchDeleting}
+                  className="px-5 py-2.5 rounded-xl font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleBatchDeleteConfirm}
+                  disabled={isBatchDeleting}
+                  className="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-900/50 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isBatchDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Ya, Hapus Semua
                 </button>
               </div>
             </div>
