@@ -43,6 +43,7 @@ export default function JinglesPage() {
   const [statusText, setStatusText] = useState("");
   
   const [packageType, setPackageType] = useState<"Personal" | "Business" | "Corporate">("Personal");
+  const [jingleLimit, setJingleLimit] = useState<number>(1);
   const [adsList, setAdsList] = useState<MediaFile[]>([]);
   const [selectedAds, setSelectedAds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,6 +72,7 @@ export default function JinglesPage() {
         const pkgJson = await pkgRes.json();
         if (pkgJson.success) {
           setPackageType(pkgJson.package);
+          if (pkgJson.jingle_limit !== undefined) setJingleLimit(pkgJson.jingle_limit);
         }
 
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/playlists?s=${selectedStation.serverUrl}`);
@@ -105,7 +107,7 @@ export default function JinglesPage() {
     }
   }, [packageType]);
 
-  const adLimit = packageType === "Personal" ? 1 : packageType === "Business" ? 5 : 10;
+  const adLimit = jingleLimit;
   const canUpload = adsList.length < adLimit;
 
   const handleCreatePlaylist = async () => {
@@ -118,7 +120,9 @@ export default function JinglesPage() {
         play_per_songs: scheduleType === "once_per_x_songs" ? scheduleValue : 0,
         play_per_minutes: scheduleType === "once_per_x_minutes" ? scheduleValue : 0,
         weight: 3,
-        include_in_requests: false
+        include_in_requests: false,
+        is_jingle: true,
+        avoid_duplicates: true
       };
       
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/playlists?s=${selectedStation.serverUrl}`, {
@@ -151,7 +155,10 @@ export default function JinglesPage() {
         type: scheduleType,
         play_per_songs: scheduleType === "once_per_x_songs" ? scheduleValue : 0,
         play_per_minutes: scheduleType === "once_per_x_minutes" ? scheduleValue : 0,
-        include_in_requests: false
+        include_in_requests: false,
+        weight: 3,
+        is_jingle: true,
+        avoid_duplicates: true
       };
       
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/playlists/${jinglePlaylist.id}?s=${selectedStation.serverUrl}`, {
