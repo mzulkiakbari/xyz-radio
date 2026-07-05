@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 "use client";
 
 import { RoleGuard } from "@/components/RoleGuard";
@@ -5,7 +6,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 export default function RecruitmentPage() {
   const handleOpenRecruitment = () => {
     // Integration logic with discord bot to send embed
-    alert("Sending recruitment embed to Discord...");
+    toast.success("Sending recruitment embed to Discord...");
   };
 
   return (
@@ -34,3 +35,5 @@ export default function RecruitmentPage() {
     </RoleGuard>
   );
 }
+
+

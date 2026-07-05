@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2 } from "lucide-react";
 import { useStation } from "@/components/StationContext";
 
@@ -106,10 +107,10 @@ export default function MediaPage() {
         setEditingMedia(null);
         reloadMedia();
       } else {
-        alert("Gagal mengupdate judul: " + (json.error || "Unknown error"));
+        toast.error("Gagal mengupdate judul: " + (json.error || "Unknown error"));
       }
     } catch(err) {
-      alert("Error: " + err);
+      toast.error("Error: " + err);
     } finally {
       setIsProcessing(false);
     }
@@ -130,18 +131,18 @@ export default function MediaPage() {
         setDeletingMedia(null);
         reloadMedia();
       } else {
-        alert("Gagal menghapus lagu: " + (json.error || "Unknown error"));
+        toast.error("Gagal menghapus lagu: " + (json.error || "Unknown error"));
       }
     } catch(err) {
-      alert("Error: " + err);
+      toast.error("Error: " + err);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleDownload = async () => {
-    if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
-    if (!ytUrl) return alert("Masukkan URL terlebih dahulu");
+    if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
+    if (!ytUrl) return toast.error("Masukkan URL terlebih dahulu");
     setIsDownloading(true);
     setDownloadProgress(0);
     setStatusText("Menghubungkan ke server...");
@@ -174,7 +175,7 @@ export default function MediaPage() {
               if (data.progress !== undefined) setDownloadProgress(data.progress);
               if (data.statusText) setStatusText(data.statusText);
               if (data.error) {
-                alert(`Error: ${data.statusText}`);
+                toast.error(`Error: ${data.statusText}`);
                 break;
               }
               if (data.success) {
@@ -195,7 +196,7 @@ export default function MediaPage() {
         reloadMedia();
       }
     } catch (err) {
-      alert("Error: " + err);
+      toast.error("Error: " + err);
     } finally {
       setIsDownloading(false);
       setDownloadProgress(0);
@@ -204,13 +205,13 @@ export default function MediaPage() {
   };
 
   const handleLocalUpload = async (file: File) => {
-    if (!selectedStation) return alert("Pilih stasiun radio terlebih dahulu!");
+    if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
     if (!file.type.startsWith('audio/')) {
-      return alert("Hanya file audio yang diizinkan!");
+      return toast.error("Hanya file audio yang diizinkan!");
     }
     // Batasan ukuran file (20MB) yang setara dengan durasi 10-15 menit untuk menghemat RAM
     if (file.size > 20 * 1024 * 1024) {
-      return alert("Ukuran file terlalu besar! Maksimal ukuran file adalah 20MB (setara dengan ~10 menit lagu).");
+      return toast.error("Ukuran file terlalu besar! Maksimal ukuran file adalah 20MB (setara dengan ~10 menit lagu).");
     }
 
     setIsUploadingLocal(true);
@@ -254,19 +255,19 @@ export default function MediaPage() {
           setIsUploadModalOpen(false);
           reloadMedia();
         } else {
-          alert(`Gagal upload file: ${json.error}`);
+          toast.error(`Gagal upload file: ${json.error}`);
         }
         setIsUploadingLocal(false);
       };
       
       reader.onerror = () => {
-        alert("Gagal membaca file");
+        toast.error("Gagal membaca file");
         setIsUploadingLocal(false);
       };
 
       reader.readAsDataURL(file);
     } catch (err) {
-      alert("Error: " + err);
+      toast.error("Error: " + err);
       setIsUploadingLocal(false);
     }
   };
@@ -624,3 +625,4 @@ export default function MediaPage() {
     </div>
   );
 }
+

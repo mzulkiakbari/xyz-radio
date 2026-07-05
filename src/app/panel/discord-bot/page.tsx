@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Play, Square, Settings2, Mic2, AlertCircle, RefreshCw } from "lucide-react";
 import { useStation } from "@/components/StationContext";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 type VoiceChannel = {
   id: string;
@@ -35,8 +36,20 @@ export default function BroadcastPage() {
     fetchChannels();
   }, []);
 
-  async function fetchChannels() {
-    setIsLoadingChannels(true);
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (guilds.length === 0 && !isLoadingChannels && !error) {
+      interval = setInterval(() => {
+        fetchChannels(true);
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [guilds.length, isLoadingChannels, error]);
+
+  async function fetchChannels(silent = false) {
+    if (!silent) setIsLoadingChannels(true);
     setError(null);
     try {
       // Ambil Discord ID dari session (provider_id dari OAuth Discord)
@@ -93,7 +106,7 @@ export default function BroadcastPage() {
     } catch (err) {
       setError("Backend tidak dapat dihubungi. Pastikan server.js berjalan.");
     } finally {
-      setIsLoadingChannels(false);
+      if (!silent) setIsLoadingChannels(false);
     }
   };
 
@@ -111,7 +124,7 @@ export default function BroadcastPage() {
 
   const handleToggleBroadcast = async () => {
     if (!selectedChannelId && !isPlaying) {
-      alert("Pilih Voice Channel terlebih dahulu!");
+      toast.error("Pilih Voice Channel terlebih dahulu!");
       return;
     }
 
@@ -136,7 +149,7 @@ export default function BroadcastPage() {
         const json = await res.json();
         
         if (json.success) setIsPlaying(true);
-        else alert(`Error: ${json.error}`);
+        else toast.error(`Error: ${json.error}`);
       } else {
         // Stop Broadcast
         const res = await fetch(`${backendUrl}/api/bot/stop`, {
@@ -149,13 +162,38 @@ export default function BroadcastPage() {
         if (json.success) setIsPlaying(false);
       }
     } catch (err) {
-      alert("Koneksi ke backend gagal.");
+      toast.error("Koneksi ke backend gagal.");
     } finally {
       setIsConnecting(false);
     }
   };
 
   const activeGuild = guilds.find(g => g.id === selectedGuildId);
+
+  if (!isLoadingChannels && guilds.length === 0 && !error) {
+    return (
+      <div className="p-8 max-w-5xl mx-auto w-full flex flex-col items-center justify-center h-full min-h-[60vh]">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-12 flex flex-col items-center max-w-lg text-center shadow-lg transition-colors duration-300">
+          <div className="w-24 h-24 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+            <Mic2 className="w-12 h-12 text-blue-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white">Bot Belum Ada di Server Kamu</h2>
+          <p className="text-zinc-500 dark:text-zinc-400 mb-8">
+            Kami tidak menemukan server yang kamu kelola (sebagai Admin/Manajer) yang memiliki bot ini. 
+            Silakan tambahkan bot ke server kamu terlebih dahulu. Halaman ini akan memuat ulang secara otomatis.
+          </p>
+          <a
+            href="https://s.id/XYZApp"
+            target="_blank"
+            rel="noreferrer"
+            className="px-8 py-4 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/20"
+          >
+            Tambahkan Bot ke Server
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-5xl mx-auto w-full flex flex-col h-full">
@@ -239,7 +277,7 @@ export default function BroadcastPage() {
                 <Settings2 className="w-5 h-5 text-zinc-500 dark:text-zinc-400 transition-colors duration-300" />
                 <h3 className="font-bold text-zinc-900 dark:text-white transition-colors duration-300">Target Server</h3>
               </div>
-              <button onClick={fetchChannels} className="text-zinc-500 hover:text-white transition-colors" title="Refresh Channels">
+              <button onClick={() => fetchChannels()} className="text-zinc-500 hover:text-white transition-colors" title="Refresh Channels">
                 <RefreshCw className={`w-4 h-4 ${isLoadingChannels ? "animate-spin" : ""}`} />
               </button>
             </div>
