@@ -197,7 +197,8 @@ export default function JinglesPage() {
         body: JSON.stringify({ 
           url: ytUrl, 
           stationId: selectedStation.id,
-          playlistName: "Jingles & Ads" 
+          playlistName: "Jingles & Ads",
+          s: selectedStation.serverUrl
         })
       });
 
