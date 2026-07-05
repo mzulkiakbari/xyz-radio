@@ -51,6 +51,11 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
           if (json.success) {
             setStations(json.data);
             setIsAuthenticated(true);
+            const savedId = localStorage.getItem("selected_station_id");
+            if (savedId) {
+              const matched = json.data.find((s: Station) => s.id.toString() === savedId);
+              if (matched) setSelectedStation(matched);
+            }
           } else {
             setRadioError(true);
           }
