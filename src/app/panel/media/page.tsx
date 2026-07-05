@@ -70,7 +70,10 @@ export default function MediaPage() {
         const json = await res.json();
         
         if (json.success) {
-          setMediaFiles(json.data || []);
+          const defaultMedia = (json.data || []).filter((f: any) => 
+            f.playlists && f.playlists.some((p: any) => p.name.toLowerCase() === "default")
+          );
+          setMediaFiles(defaultMedia);
         } else {
           setError(json.error || "Gagal memuat media.");
         }
@@ -91,7 +94,12 @@ export default function MediaPage() {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
       const json = await res.json();
-      if (json.success) setMediaFiles(json.data || []);
+      if (json.success) {
+        const defaultMedia = (json.data || []).filter((f: any) => 
+          f.playlists && f.playlists.some((p: any) => p.name.toLowerCase() === "default")
+        );
+        setMediaFiles(defaultMedia);
+      }
       setSelectedMediaIds([]);
     } catch (err) {} finally { setIsLoading(false); }
   };
