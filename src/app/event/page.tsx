@@ -88,7 +88,7 @@ export default function EventPage() {
   const fetchPlaylists = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists?s=${serverUrl}`);
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists?s=${serverUrl}&t=${Date.now()}`);
       const json = await res.json();
       if (json.success && json.data) setPlaylists(json.data);
     } catch (err) {}
@@ -99,7 +99,7 @@ export default function EventPage() {
     setError(null);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media?s=${serverUrl}`);
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media?s=${serverUrl}&t=${Date.now()}`);
       const json = await res.json();
       if (json.success) {
         setMediaFiles(json.data || []);
