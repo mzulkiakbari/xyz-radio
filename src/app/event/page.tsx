@@ -17,9 +17,15 @@ type MediaFile = {
 export default function EventPage() {
   const router = useRouter();
   const [eventName, setEventName] = useState("Event");
+  const [isActionLoading, setIsActionLoading] = useState(false);
   
   const stationId = 8;
   const serverUrl = "https://s1.radio.xyz-sa.site";
+
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [activePlaylist, setActivePlaylist] = useState<string>("default");
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"local" | "youtube">("local");
@@ -75,6 +81,15 @@ export default function EventPage() {
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
   const [localUploadProgress, setLocalUploadProgress] = useState(0);
 
+  const fetchPlaylists = async () => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists`);
+      const json = await res.json();
+      if (json.success && json.data) setPlaylists(json.data);
+    } catch (err) {}
+  };
+
   const fetchMedia = async () => {
     setIsLoading(true);
     setError(null);
@@ -83,10 +98,7 @@ export default function EventPage() {
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media?s=${serverUrl}`);
       const json = await res.json();
       if (json.success) {
-        const defaultMedia = (json.data || []).filter((f: any) => 
-          f.playlists && f.playlists.some((p: any) => p.name.toLowerCase() === "default")
-        );
-        setMediaFiles(defaultMedia);
+        setMediaFiles(json.data || []);
       } else {
         setError(json.error || "Gagal memuat media.");
       }
@@ -109,6 +121,7 @@ export default function EventPage() {
   };
 
   useEffect(() => {
+    fetchPlaylists();
     fetchMedia();
     fetchNowPlaying();
     const interval = setInterval(fetchNowPlaying, 10000);
@@ -143,6 +156,81 @@ export default function EventPage() {
     localStorage.removeItem("event_token");
     localStorage.removeItem("event_name");
     router.push("/event/login");
+  };
+
+  const handleStartStopEvent = async (action: "start" | "stop") => {
+    setIsActionLoading(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/event/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, eventName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success(action === "start" ? "Event Berhasil Dimulai!" : "Event Berhasil Dihentikan!");
+        if (action === "stop") {
+          setMediaFiles([]);
+          setPlaylists([]);
+          fetchPlaylists();
+        }
+      } else {
+        toast.error("Gagal " + action + " event: " + json.error);
+      }
+    } catch (err) {
+      toast.error("Gagal menghubungi server");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim()) return;
+    setIsCreatingPlaylist(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newPlaylistName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Playlist berhasil dibuat!");
+        setNewPlaylistName("");
+        fetchPlaylists();
+      } else {
+        toast.error("Gagal membuat playlist");
+      }
+    } catch (err) {
+      toast.error("Error connecting to server");
+    } finally {
+      setIsCreatingPlaylist(false);
+    }
+  };
+
+  const handlePlayPlaylist = async () => {
+    setIsActionLoading(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const targetPlaylist = playlists.find(p => p.name.toLowerCase() === activePlaylist.toLowerCase());
+      if (!targetPlaylist) return toast.error("Playlist tidak valid");
+      
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${targetPlaylist.id}/activate`, {
+        method: "PUT"
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Memutar Playlist " + activePlaylist);
+      } else {
+        toast.error("Gagal memutar playlist");
+      }
+    } catch (err) {
+      toast.error("Error connecting to server");
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
   const handleEditSave = async () => {
@@ -241,7 +329,7 @@ export default function EventPage() {
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytUrl, stationId })
+        body: JSON.stringify({ url: ytUrl, stationId, playlistName: activePlaylist })
       });
       if (!res.ok || !res.body) throw new Error("Gagal terhubung ke backend");
       const reader = res.body.getReader();
@@ -301,7 +389,7 @@ export default function EventPage() {
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media/upload?s=${serverUrl}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data })
+          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data, playlistName: activePlaylist })
         });
         clearInterval(progressInterval);
         const json = await res.json();
@@ -324,9 +412,11 @@ export default function EventPage() {
     }
   };
 
-  const filteredMedia = mediaFiles.filter(m => 
-    (m.title || m.text || m.path).toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMedia = mediaFiles.filter(m => {
+    const matchesSearch = (m.title || m.text || m.path).toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPlaylist = (m as any).playlists && (m as any).playlists.some((p: any) => p.name.toLowerCase() === activePlaylist.toLowerCase());
+    return matchesSearch && matchesPlaylist;
+  });
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
@@ -338,13 +428,31 @@ export default function EventPage() {
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400">Event Radio Stream Panel</p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-red-200 dark:border-red-900/30"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleStartStopEvent("start")}
+            disabled={isActionLoading}
+            className="bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:text-green-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-green-200 dark:border-green-900/30 disabled:opacity-50"
+          >
+            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+            <span>Start Event</span>
+          </button>
+          <button
+            onClick={() => handleStartStopEvent("stop")}
+            disabled={isActionLoading}
+            className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-red-200 dark:border-red-900/30 disabled:opacity-50"
+          >
+            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MonitorPlay className="w-5 h-5" />}
+            <span>Stop Event</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-zinc-200 dark:border-zinc-700"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </div>
       </header>
 
       {/* Now Playing Card */}
@@ -380,13 +488,52 @@ export default function EventPage() {
           <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Media Library</h2>
           <p className="text-zinc-500 text-sm">Kelola file audio event kamu</p>
         </div>
-        <button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all shadow-lg shadow-indigo-900/50"
-        >
-          <Upload className="w-5 h-5" />
-          <span>Upload Media</span>
-        </button>
+        
+        <div className="flex flex-col md:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+            <select
+              value={activePlaylist}
+              onChange={(e) => setActivePlaylist(e.target.value)}
+              className="bg-white dark:bg-zinc-900 text-sm font-medium text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg border-none focus:ring-0 outline-none cursor-pointer"
+            >
+              {playlists.map(p => (
+                <option key={p.id} value={p.name}>{p.name}</option>
+              ))}
+              {playlists.length === 0 && <option value="default">default</option>}
+            </select>
+            <input 
+              type="text" 
+              placeholder="New Playlist..." 
+              value={newPlaylistName}
+              onChange={(e) => setNewPlaylistName(e.target.value)}
+              className="w-32 bg-white dark:bg-zinc-900 text-sm px-3 py-2 rounded-lg border-none focus:ring-0 outline-none"
+            />
+            <button
+              onClick={handleCreatePlaylist}
+              disabled={isCreatingPlaylist || !newPlaylistName.trim()}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors"
+            >
+              {isCreatingPlaylist ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+            </button>
+          </div>
+
+          <button
+            onClick={handlePlayPlaylist}
+            disabled={isActionLoading || playlists.length === 0}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50"
+          >
+            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+            <span className="whitespace-nowrap">Play Playlist</span>
+          </button>
+
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all shadow-lg shadow-indigo-900/50"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="whitespace-nowrap">Upload Media</span>
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
