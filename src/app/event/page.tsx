@@ -12,6 +12,7 @@ type MediaFile = {
   artist: string;
   title: string;
   length_text: string;
+  playlists?: any[];
 };
 
 export default function EventPage() {
@@ -24,7 +25,10 @@ export default function EventPage() {
 
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [activePlaylist, setActivePlaylist] = useState<string>("default");
+  const [uploadPlaylist, setUploadPlaylist] = useState<string>("default");
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [editPlaylistName, setEditPlaylistName] = useState("");
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -210,21 +214,44 @@ export default function EventPage() {
     }
   };
 
-  const handlePlayPlaylist = async () => {
+  const handlePlayPlaylist = async (targetPlaylistId: string, targetPlaylistName: string) => {
     setIsActionLoading(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const targetPlaylist = playlists.find(p => p.name.toLowerCase() === activePlaylist.toLowerCase());
-      if (!targetPlaylist) return toast.error("Playlist tidak valid");
       
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${targetPlaylist.id}/activate`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${targetPlaylistId}/activate`, {
         method: "PUT"
       });
       const json = await res.json();
       if (json.success) {
-        toast.success("Memutar Playlist " + activePlaylist);
+        toast.success("Memutar Playlist " + targetPlaylistName);
       } else {
         toast.error("Gagal memutar playlist");
+      }
+    } catch (err) {
+      toast.error("Error connecting to server");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleEditPlaylistSave = async (playlistId: string) => {
+    if (!editPlaylistName.trim()) return;
+    setIsActionLoading(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${playlistId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editPlaylistName })
+      });
+      const json = await res.json();
+      if (json.success) {
+        toast.success("Nama playlist berhasil diubah!");
+        setEditingPlaylistId(null);
+        fetchPlaylists();
+      } else {
+        toast.error("Gagal mengubah nama playlist: " + (json.error || "Unknown error"));
       }
     } catch (err) {
       toast.error("Error connecting to server");
@@ -329,7 +356,7 @@ export default function EventPage() {
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytUrl, stationId, playlistName: activePlaylist })
+        body: JSON.stringify({ url: ytUrl, stationId, playlistName: uploadPlaylist })
       });
       if (!res.ok || !res.body) throw new Error("Gagal terhubung ke backend");
       const reader = res.body.getReader();
@@ -389,7 +416,7 @@ export default function EventPage() {
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media/upload?s=${serverUrl}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data, playlistName: activePlaylist })
+          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data, playlistName: uploadPlaylist })
         });
         clearInterval(progressInterval);
         const json = await res.json();
@@ -494,40 +521,21 @@ export default function EventPage() {
         
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
-            <select
-              value={activePlaylist}
-              onChange={(e) => setActivePlaylist(e.target.value)}
-              className="bg-white dark:bg-zinc-900 text-sm font-medium text-zinc-700 dark:text-zinc-300 px-3 py-2 rounded-lg border-none focus:ring-0 outline-none cursor-pointer"
-            >
-              {playlists.map(p => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-              {playlists.length === 0 && <option value="default">default</option>}
-            </select>
             <input 
               type="text" 
               placeholder="New Playlist..." 
               value={newPlaylistName}
               onChange={(e) => setNewPlaylistName(e.target.value)}
-              className="w-32 bg-white dark:bg-zinc-900 text-sm px-3 py-2 rounded-lg border-none focus:ring-0 outline-none"
+              className="w-48 bg-white dark:bg-zinc-900 text-sm px-3 py-2 rounded-lg border-none focus:ring-0 outline-none"
             />
             <button
               onClick={handleCreatePlaylist}
               disabled={isCreatingPlaylist || !newPlaylistName.trim()}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition-colors whitespace-nowrap"
             >
-              {isCreatingPlaylist ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+              {isCreatingPlaylist ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Add New Playlist"}
             </button>
           </div>
-
-          <button
-            onClick={handlePlayPlaylist}
-            disabled={isActionLoading || playlists.length === 0}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50"
-          >
-            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-            <span className="whitespace-nowrap">Play Playlist</span>
-          </button>
 
           <button
             onClick={() => setIsUploadModalOpen(true)}
@@ -574,108 +582,132 @@ export default function EventPage() {
         </div>
       )}
 
-      {/* Media List */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm dark:shadow-none transition-colors duration-300">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider transition-colors duration-300">
-          <div className="col-span-6 md:col-span-5 flex items-center gap-3">
-            <input 
-              type="checkbox" 
-              checked={filteredMedia.length > 0 && selectedMediaIds.length === filteredMedia.length}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedMediaIds(filteredMedia.map(m => m.id));
-                } else {
-                  setSelectedMediaIds([]);
-                }
-              }}
-              className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 dark:bg-zinc-800 cursor-pointer"
-            />
-            <span>File / Title</span>
-          </div>
-          <div className="hidden md:block col-span-4">Artist</div>
-          <div className="col-span-4 md:col-span-2 text-right">Duration</div>
-          <div className="col-span-2 md:col-span-1 text-right">Actions</div>
-        </div>
-
+      {/* Playlists & Media Cards */}
+      <div className="space-y-6 mb-8">
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
           </div>
-        ) : filteredMedia.length === 0 ? (
-          <div className="text-center py-20 text-zinc-500">
-            {searchQuery ? "Tidak ada media yang cocok dengan pencarian." : "Belum ada media di stasiun ini."}
-          </div>
         ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50 transition-colors duration-300">
-            {filteredMedia.map((file, i) => (
-              <div key={i} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group last:rounded-b-2xl">
-                <div className="col-span-6 md:col-span-5 flex items-center space-x-3">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedMediaIds.includes(file.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedMediaIds(prev => [...prev, file.id]);
-                      } else {
-                        setSelectedMediaIds(prev => prev.filter(id => id !== file.id));
-                      }
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 dark:bg-zinc-800 cursor-pointer flex-shrink-0"
-                  />
-                  <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 flex-shrink-0">
-                    <FileAudio className="w-4 h-4" />
+          playlists.map((playlist) => {
+            const playlistMedia = filteredMedia.filter(m => m.playlists && m.playlists.some((p: any) => p.name === playlist.name));
+            const isDefault = playlist.name.toLowerCase() === "default";
+            
+            return (
+              <div key={playlist.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
+                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handlePlayPlaylist(playlist.id, playlist.name)}
+                      disabled={isActionLoading}
+                      className="w-12 h-12 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 flex-shrink-0 shadow-sm"
+                      title={`Play Playlist ${playlist.name}`}
+                    >
+                      {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 ml-1" />}
+                    </button>
+                    
+                    {editingPlaylistId === playlist.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editPlaylistName}
+                          onChange={(e) => setEditPlaylistName(e.target.value)}
+                          className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 w-48"
+                        />
+                        <button onClick={() => handleEditPlaylistSave(playlist.id)} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold px-2">Save</button>
+                        <button onClick={() => setEditingPlaylistId(null)} className="text-zinc-500 hover:text-zinc-700 px-2">Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                          {playlist.name}
+                          {isDefault && <span className="text-xs font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded">AutoDJ Utama</span>}
+                        </h3>
+                        {!isDefault && (
+                          <button
+                            onClick={() => {
+                              setEditingPlaylistId(playlist.id);
+                              setEditPlaylistName(playlist.name);
+                            }}
+                            className="text-zinc-400 hover:text-indigo-500 transition-colors p-1"
+                            title="Edit Playlist Name"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-zinc-900 dark:text-white font-medium truncate">{file.title || file.text || file.path}</p>
-                    <p className="text-zinc-500 text-sm truncate">{file.path}</p>
+                  <div className="text-sm font-medium text-zinc-500">
+                    {playlistMedia.length} Tracks
                   </div>
                 </div>
-                <div className="hidden md:block col-span-4 text-zinc-500 dark:text-zinc-400 truncate">
-                  {file.artist || "Unknown Artist"}
-                </div>
-                <div className="col-span-4 md:col-span-2 text-right text-zinc-500 dark:text-zinc-400 font-medium">
-                  {file.length_text || "--:--"}
-                </div>
-                <div className="col-span-2 md:col-span-1 flex justify-end relative">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpenId(dropdownOpenId === file.id ? null : file.id);
-                    }}
-                    className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                  {dropdownOpenId === file.id && (
-                    <div ref={dropdownRef} className="absolute right-0 top-10 w-48 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 z-50 animate-in fade-in slide-in-from-top-2">
-                      <button 
-                        onClick={() => {
-                          setEditTitle(file.title || file.text || "");
-                          setEditingMedia(file);
-                          setDropdownOpenId(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center space-x-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        <span>Edit Title</span>
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setDeletingMedia(file);
-                          setDropdownOpenId(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Delete</span>
-                      </button>
+
+                <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                  {playlistMedia.length === 0 ? (
+                    <div className="p-6 text-center text-zinc-500 text-sm">
+                      Belum ada lagu di playlist ini.
                     </div>
+                  ) : (
+                    playlistMedia.map((file: any) => (
+                      <div key={file.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedMediaIds.includes(file.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedMediaIds(prev => [...prev, file.id]);
+                              else setSelectedMediaIds(prev => prev.filter(id => id !== file.id));
+                            }}
+                            className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 dark:bg-zinc-800 cursor-pointer flex-shrink-0"
+                          />
+                          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 flex-shrink-0">
+                            <FileAudio className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-zinc-900 dark:text-white font-medium truncate text-sm">{file.title || file.text || file.path}</p>
+                            <p className="text-zinc-500 text-xs truncate">{file.artist || "Unknown Artist"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end space-x-4 mt-3 sm:mt-0">
+                          <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                            {file.length_text || "--:--"}
+                          </div>
+                          <div className="flex items-center relative">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDropdownOpenId(dropdownOpenId === file.id ? null : file.id);
+                              }}
+                              className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            >
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                            {dropdownOpenId === file.id && (
+                              <div className="absolute right-0 top-10 w-48 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 py-1 z-50 animate-in fade-in slide-in-from-top-2">
+                                <button 
+                                  onClick={() => { setEditTitle(file.title || file.text || ""); setEditingMedia(file); setDropdownOpenId(null); }}
+                                  className="w-full px-4 py-2 text-left text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center space-x-2"
+                                >
+                                  <Edit2 className="w-4 h-4" /><span>Edit Title</span>
+                                </button>
+                                <button 
+                                  onClick={() => { setDeletingMedia(file); setDropdownOpenId(null); }}
+                                  className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
+                                >
+                                  <Trash2 className="w-4 h-4" /><span>Delete</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
 
@@ -691,6 +723,20 @@ export default function EventPage() {
             </div>
             
             <div className="p-6">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Pilih Playlist Tujuan</label>
+                <select
+                  value={uploadPlaylist}
+                  onChange={(e) => setUploadPlaylist(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                >
+                  <option value="default">default (AutoDJ Utama)</option>
+                  {playlists.filter(p => p.name.toLowerCase() !== "default").map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex p-1 bg-zinc-100 dark:bg-black rounded-xl mb-6 transition-colors duration-300">
                 <button
                   onClick={() => setActiveTab("local")}
