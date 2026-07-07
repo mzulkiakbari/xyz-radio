@@ -357,7 +357,7 @@ export default function EventPage() {
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytUrl, stationId, playlistName: uploadPlaylist })
+        body: JSON.stringify({ url: ytUrl, stationId, playlistName: uploadPlaylist, serverUrl })
       });
       if (!res.ok || !res.body) throw new Error("Gagal terhubung ke backend");
       const reader = res.body.getReader();
