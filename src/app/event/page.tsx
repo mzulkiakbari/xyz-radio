@@ -88,7 +88,7 @@ export default function EventPage() {
   const fetchPlaylists = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists`);
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists?s=${serverUrl}`);
       const json = await res.json();
       if (json.success && json.data) setPlaylists(json.data);
     } catch (err) {}
@@ -194,7 +194,7 @@ export default function EventPage() {
     setIsCreatingPlaylist(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists?s=${serverUrl}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newPlaylistName })
@@ -219,7 +219,7 @@ export default function EventPage() {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
       
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${targetPlaylistId}/activate`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${targetPlaylistId}/activate?s=${serverUrl}`, {
         method: "PUT"
       });
       const json = await res.json();
@@ -240,7 +240,7 @@ export default function EventPage() {
     setIsActionLoading(true);
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${playlistId}`, {
+      const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists/${playlistId}?s=${serverUrl}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editPlaylistName })
@@ -623,18 +623,16 @@ export default function EventPage() {
                           {playlist.name}
                           {isDefault && <span className="text-xs font-semibold bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded">AutoDJ Utama</span>}
                         </h3>
-                        {!isDefault && (
-                          <button
-                            onClick={() => {
-                              setEditingPlaylistId(playlist.id);
-                              setEditPlaylistName(playlist.name);
-                            }}
-                            className="text-zinc-400 hover:text-indigo-500 transition-colors p-1"
-                            title="Edit Playlist Name"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => {
+                            setEditingPlaylistId(playlist.id);
+                            setEditPlaylistName(playlist.name);
+                          }}
+                          className="text-zinc-400 hover:text-indigo-500 transition-colors p-1"
+                          title="Edit Playlist Name"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
                       </div>
                     )}
                   </div>
