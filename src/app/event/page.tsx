@@ -643,6 +643,9 @@ export default function EventPage() {
                   </div>
                   <div className="text-sm font-medium text-zinc-500">
                     {playlistMedia.length} Tracks
+                    <span className="ml-2 text-xs text-red-500">
+                      (Total media: {filteredMedia.length}, matches ID {playlist.id}: {filteredMedia.filter(m => m.playlists && m.playlists.some((p: any) => Number(p.id) === Number(playlist.id))).length})
+                    </span>
                   </div>
                 </div>
 
