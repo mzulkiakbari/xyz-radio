@@ -591,7 +591,7 @@ export default function EventPage() {
           </div>
         ) : (
           playlists.map((playlist) => {
-            const playlistMedia = filteredMedia.filter(m => m.playlists && m.playlists.some((p: any) => p.name === playlist.name));
+            const playlistMedia = filteredMedia.filter(m => m.playlists && m.playlists.some((p: any) => Number(p.id) === Number(playlist.id)));
             const isDefault = playlist.name.toLowerCase() === "default";
             
             return (
