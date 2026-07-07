@@ -22,7 +22,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       const isPublicRoute = pathname === "/" || pathname === "/login";
-      const isEmployeeOrAdmin = pathname.startsWith("/employee") || pathname.startsWith("/admin");
+      const isEmployeeOrAdmin = pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname.startsWith("/event");
 
       if (isEmployeeOrAdmin) {
         setIsLoading(false);
@@ -78,7 +78,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname.startsWith("/portal") || pathname === "/") {
+  if (pathname.startsWith("/employee") || pathname.startsWith("/admin") || pathname.startsWith("/portal") || pathname.startsWith("/event") || pathname === "/") {
     return <main className="flex-1 w-full h-full">{children}</main>;
   }
 
