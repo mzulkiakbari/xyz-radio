@@ -197,7 +197,7 @@ export default function EventPage() {
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/playlists?s=${serverUrl}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newPlaylistName })
+        body: JSON.stringify({ name: newPlaylistName, is_enabled: false, playback_order: "sequential" })
       });
       const json = await res.json();
       if (json.success) {
