@@ -429,22 +429,25 @@ export default function EventPage() {
           <p className="text-zinc-500 dark:text-zinc-400">Event Radio Stream Panel</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => handleStartStopEvent("start")}
-            disabled={isActionLoading}
-            className="bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:text-green-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-green-200 dark:border-green-900/30 disabled:opacity-50"
-          >
-            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-            <span>Start Event</span>
-          </button>
-          <button
-            onClick={() => handleStartStopEvent("stop")}
-            disabled={isActionLoading}
-            className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-red-200 dark:border-red-900/30 disabled:opacity-50"
-          >
-            {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MonitorPlay className="w-5 h-5" />}
-            <span>Stop Event</span>
-          </button>
+          {nowPlaying?.station?.name === eventName ? (
+            <button
+              onClick={() => handleStartStopEvent("stop")}
+              disabled={isActionLoading}
+              className="bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-red-200 dark:border-red-900/30 disabled:opacity-50"
+            >
+              {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MonitorPlay className="w-5 h-5" />}
+              <span>Stop Event</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleStartStopEvent("start")}
+              disabled={isActionLoading}
+              className="bg-green-50 hover:bg-green-100 text-green-600 dark:bg-green-900/20 dark:hover:bg-green-900/40 dark:text-green-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-green-200 dark:border-green-900/30 disabled:opacity-50"
+            >
+              {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+              <span>Start Event</span>
+            </button>
+          )}
           <button
             onClick={handleLogout}
             className="bg-zinc-100 hover:bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-400 px-5 py-2.5 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-all border border-zinc-200 dark:border-zinc-700"
