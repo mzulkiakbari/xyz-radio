@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2, Headphones, Radio, SkipForward, LogOut } from "lucide-react";
+import { Upload, Play, Square, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2, Headphones, Radio, SkipForward, LogOut } from "lucide-react";
 
 type MediaFile = {
   id: string;
@@ -225,6 +225,7 @@ export default function EventPage() {
       const json = await res.json();
       if (json.success) {
         toast.success("Memutar Playlist " + targetPlaylistName);
+        fetchPlaylists();
       } else {
         toast.error("Gagal memutar playlist");
       }
@@ -599,11 +600,15 @@ export default function EventPage() {
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => handlePlayPlaylist(playlist.id, playlist.name)}
-                      disabled={isActionLoading}
-                      className="w-12 h-12 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 flex-shrink-0 shadow-sm"
-                      title={`Play Playlist ${playlist.name}`}
+                      disabled={isActionLoading || playlist.is_enabled}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm flex-shrink-0 disabled:opacity-50 ${
+                        playlist.is_enabled 
+                          ? "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 cursor-default" 
+                          : "bg-emerald-100 hover:bg-emerald-200 text-emerald-600 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-400"
+                      }`}
+                      title={playlist.is_enabled ? `Sedang Diputar: ${playlist.name}` : `Putar Playlist ${playlist.name}`}
                     >
-                      {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 ml-1" />}
+                      {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : playlist.is_enabled ? <Square className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 ml-1" />}
                     </button>
                     
                     {editingPlaylistId === playlist.id ? (
