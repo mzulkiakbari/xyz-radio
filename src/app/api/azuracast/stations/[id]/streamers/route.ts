@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const stationId = params.id;
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const stationId = (await params).id;
   const RADIO_API_URL = process.env.RADIO_API_URL || "https://radio.xyz-sa.site/api";
   const AZURACAST_API_KEY = process.env.AZURACAST_API_KEY;
 

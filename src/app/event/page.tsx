@@ -24,7 +24,7 @@ export default function EventPage() {
   const serverUrl = "https://s1.radio.xyz-sa.site";
 
   const [playlists, setPlaylists] = useState<any[]>([]);
-  const [activePlaylist, setActivePlaylist] = useState<string>("default");
+
   const [uploadPlaylist, setUploadPlaylist] = useState<string>("default");
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
@@ -442,8 +442,7 @@ export default function EventPage() {
 
   const filteredMedia = mediaFiles.filter(m => {
     const matchesSearch = (m.title || m.text || m.path).toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlaylist = (m as any).playlists && (m as any).playlists.some((p: any) => p.name.toLowerCase() === activePlaylist.toLowerCase());
-    return matchesSearch && matchesPlaylist;
+    return matchesSearch;
   });
 
   return (
