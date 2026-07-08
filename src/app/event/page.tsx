@@ -594,8 +594,8 @@ export default function EventPage() {
             const isDefault = playlist.name.toLowerCase() === "default";
             
             return (
-              <div key={playlist.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden transition-colors duration-300">
-                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800">
+              <div key={playlist.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm transition-colors duration-300">
+                <div className="bg-zinc-50 dark:bg-zinc-950 p-5 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 rounded-t-[calc(1.5rem-1px)]">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => handlePlayPlaylist(playlist.id, playlist.name)}
@@ -642,20 +642,17 @@ export default function EventPage() {
                   </div>
                   <div className="text-sm font-medium text-zinc-500">
                     {playlistMedia.length} Tracks
-                    <span className="ml-2 text-xs text-red-500">
-                      (Total media: {filteredMedia.length}, matches ID {playlist.id}: {filteredMedia.filter(m => m.playlists && m.playlists.some((p: any) => Number(p.id) === Number(playlist.id))).length})
-                    </span>
                   </div>
                 </div>
 
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                   {playlistMedia.length === 0 ? (
-                    <div className="p-6 text-center text-zinc-500 text-sm">
+                    <div className="p-6 text-center text-zinc-500 text-sm rounded-b-[calc(1.5rem-1px)]">
                       Belum ada lagu di playlist ini.
                     </div>
                   ) : (
                     playlistMedia.map((file: any) => (
-                      <div key={file.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
+                      <div key={file.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group last:rounded-b-[calc(1.5rem-1px)]">
                         <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <input 
                             type="checkbox" 
