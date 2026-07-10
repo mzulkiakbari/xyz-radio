@@ -401,7 +401,11 @@ export default function EventPage() {
 
   const handleLocalUpload = async (file: File) => {
     if (!file.type.startsWith('audio/')) return toast.error("Hanya file audio yang diizinkan!");
+<<<<<<< HEAD
     // Batasan ukuran file dihapus untuk event web panel
+=======
+    if (file.size > 20 * 1024 * 1024) return toast.error("Ukuran file terlalu besar! Maksimal 20MB.");
+>>>>>>> bc87689c68b547bd6cf55f3efdca45ece33d89ff
     setIsUploadingLocal(true);
     setLocalUploadProgress(0);
     try {
