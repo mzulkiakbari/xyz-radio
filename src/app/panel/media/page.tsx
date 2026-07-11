@@ -208,7 +208,7 @@ export default function MediaPage() {
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytUrl, stationId: selectedStation.id })
+        body: JSON.stringify({ url: ytUrl, stationId: selectedStation.id, serverUrl: selectedStation.serverUrl })
       });
 
       if (!res.ok || !res.body) throw new Error("Gagal terhubung ke backend");
@@ -297,7 +297,8 @@ export default function MediaPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             path: file.name.replace(/\s+/g, '_'), 
-            file: base64Data 
+            file: base64Data,
+            serverUrl: selectedStation.serverUrl
           })
         });
 
