@@ -417,7 +417,7 @@ export default function EventPage() {
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${stationId}/media/upload?s=${serverUrl}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data, playlistName: uploadPlaylist })
+          body: JSON.stringify({ path: file.name.replace(/\s+/g, '_'), file: base64Data, playlistName: uploadPlaylist, serverUrl })
         });
         clearInterval(progressInterval);
         const json = await res.json();
