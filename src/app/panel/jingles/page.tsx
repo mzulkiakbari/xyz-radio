@@ -244,6 +244,23 @@ export default function JinglesPage() {
     }
   };
 
+  const handleClearQueue = async () => {
+    if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
+    try {
+      const res = await fetch(`${backendUrl}/api/media/download/queue/${selectedStation.id}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+      } else {
+        toast.error(data.message || "Gagal menghapus antrean");
+      }
+    } catch (err) {
+      toast.error("Error menghapus antrean: " + err);
+    }
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -539,6 +556,13 @@ export default function JinglesPage() {
                     >
                       {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                       Unduh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearQueue}
+                      className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"
+                    >
+                      Hapus Antrean
                     </button>
                   </div>
                   {isDownloading && (
