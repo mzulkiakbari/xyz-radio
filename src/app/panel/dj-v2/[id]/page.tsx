@@ -133,18 +133,16 @@ export default function DJPanelV2() {
   };
 
   const handleSkip = async () => {
-    // Untuk simplifikasi, panggil fungsi API jika ada, atau update state untuk memberi tahu bot
-    // Tapi karena bot mendengarkan discord event, idealnya panggil API POST /v2/action
-    // Karena kita tes lokal, buat fetch saja
     try {
-        await fetch(`http://localhost:3001/v2/action/${radioId}`, {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://webhook.xyz-sa.site";
+        await fetch(`${backendUrl}/v2/action/${radioId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'skip' })
         });
     } catch(e) {
         console.error(e);
-        alert("Bot harus berjalan lokal untuk aksi skip.");
+        alert("Gagal menghubungi server backend untuk aksi skip.");
     }
   };
 
