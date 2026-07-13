@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+function slugify(text: string) {
+    if (!text) return 'radio';
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+}
+
+export async function GET(request: Request, { params }: { params: { slug: string } }) {
+  const slug = params.slug;
+
+  try {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    if (!serviceKey) {
+        return new NextResponse("Server configuration error (missing Supabase key)", { status: 500 });
+    }
+
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceKey
+    );
+    
+    // Ambil semua radio aktif untuk dihitung slug-nya
+    const { data: radios, error } = await supabaseAdmin
+        .from('radio_orders')
+        .select('id, radio_name, azuracast_station_id, server_url, created_at')
+        .order('created_at', { ascending: true }); // Penting: urutkan agar penomoran konsisten
+        
+    if (error || !radios) {
+        return new NextResponse("Gagal memuat data radio", { status: 500 });
+    }
+
+    const usedSlugs = new Set();
+    let targetRadio = null;
+
+    for (const r of radios) {
+        let baseSlug = slugify(r.radio_name || "radio");
+        let finalSlug = baseSlug;
+        let counter = 1;
+        while (usedSlugs.has(finalSlug)) {
+            finalSlug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+        usedSlugs.add(finalSlug);
+        
+        if (finalSlug === slug) {
+            targetRadio = r;
+            break; // slug ditemukan
+        }
+    }
+
+    if (!targetRadio) {
+        return new NextResponse("Radio tidak ditemukan", { status: 404 });
+    }
+
+    // Redirect ke V2 Stream
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+    return NextResponse.redirect(`${backendUrl}/v2/stream/${targetRadio.id}`);
+
+  } catch (err) {
+    console.error("Slug Proxy Error:", err);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+}
