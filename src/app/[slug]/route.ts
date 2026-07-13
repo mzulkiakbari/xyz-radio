@@ -6,8 +6,9 @@ function slugify(text: string) {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
-  const slug = params.slug;
+export async function GET(request: Request, context: any) {
+  const params = await context.params;
+  const slug = params?.slug;
 
   try {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
