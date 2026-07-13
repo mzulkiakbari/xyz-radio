@@ -24,6 +24,9 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
             try {
                 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
                 const res = await fetch(`${backendUrl}/api/radio/resolve-id?id=${rawId}`);
+                if (!res.ok) {
+                    throw new Error(`HTTP Error: ${res.status}`);
+                }
                 const json = await res.json();
                 console.log("DEBUG: resolve-id response:", json);
                 if (json.success && json.uuid) {
@@ -31,7 +34,8 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
                     return;
                 }
             } catch (e) {
-                console.error("Gagal resolve ID:", e);
+                console.error("Gagal resolve ID dari backend:", e);
+                alert("Gagal menghubungi server untuk resolve ID Radio! Pastikan server.js terbaru sudah di-upload ke VPS dan direstart.");
             }
         }
         setRadioId(rawId);
