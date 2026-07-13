@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { Loader2, AlertCircle, Radio, Users, Settings } from "lucide-react";
 import { StationProvider, useStation, Station } from "./StationContext";
@@ -169,7 +168,6 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
     // Jika sudah memilih station, tampilkan Dashboard
     return (
       <>
-        <Sidebar />
         <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
           <TopBar />
           {children}
