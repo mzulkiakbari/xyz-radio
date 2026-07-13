@@ -329,21 +329,29 @@ export default function OverviewPage() {
       setIsProcessing(false);
   };
 
-  let streamUrl = `${appUrl}/radio?id=...`;
-  if (selectedStation) {
-    let sParam = "";
-    if (selectedStation.serverUrl) {
-      if (selectedStation.serverUrl.includes("s1.radio")) {
-        sParam = "&s=s1";
-      } else if (!selectedStation.serverUrl.includes("radio.xyz-sa.site") || selectedStation.serverUrl !== "https://radio.xyz-sa.site") {
-        const rawDomain = selectedStation.serverUrl.replace("https://", "").replace("http://", "");
-        if (rawDomain !== "radio.xyz-sa.site") {
-          sParam = `&s=${rawDomain}`;
-        }
+  const [streamUrl, setStreamUrl] = useState(`${appUrl}/radio?id=...`);
+  useEffect(() => {
+      if (selectedStation?.id) {
+          fetch(`/api/radio/slug?id=${selectedStation.id}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.slug) setStreamUrl(`https://xyz-sa.site/${data.slug}`);
+            })
+            .catch(() => {
+                // fallback
+                let sParam = "";
+                if (selectedStation.serverUrl) {
+                  if (selectedStation.serverUrl.includes("s1.radio")) {
+                    sParam = "&s=s1";
+                  } else if (!selectedStation.serverUrl.includes("radio.xyz-sa.site") || selectedStation.serverUrl !== "https://radio.xyz-sa.site") {
+                    const rawDomain = selectedStation.serverUrl.replace("https://", "").replace("http://", "");
+                    if (rawDomain !== "radio.xyz-sa.site") sParam = `&s=${rawDomain}`;
+                  }
+                }
+                setStreamUrl(`${appUrl}/radio?id=${selectedStation.id}${sParam}`);
+            });
       }
-    }
-    streamUrl = `${appUrl}/radio?id=${selectedStation.id}${sParam}`;
-  }
+  }, [selectedStation?.id, appUrl]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(streamUrl);
