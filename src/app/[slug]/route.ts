@@ -23,8 +23,8 @@ export async function GET(request: Request, { params }: { params: { slug: string
     // Ambil semua radio aktif untuk dihitung slug-nya
     const { data: radios, error } = await supabaseAdmin
         .from('radio_orders')
-        .select('id, radio_name, azuracast_station_id, server_url, created_at')
-        .order('created_at', { ascending: true }); // Penting: urutkan agar penomoran konsisten
+        .select('id, radio_name, azuracast_station_id, server_url, start_date')
+        .order('start_date', { ascending: true }); // Penting: urutkan agar penomoran konsisten
         
     if (error) {
         return new NextResponse(`Gagal memuat data radio (DB Error): ${error.message}`, { status: 500 });
