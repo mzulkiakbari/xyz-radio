@@ -58,6 +58,9 @@ export default function MediaPage() {
   const [isUploadingLocal, setIsUploadingLocal] = useState(false);
   const [localUploadProgress, setLocalUploadProgress] = useState(0);
 
+  const [packageType, setPackageType] = useState<string>("Personal");
+  const [songLimit, setSongLimit] = useState<number>(25);
+
   useEffect(() => {
     if (!selectedStation) return;
 
@@ -66,6 +69,15 @@ export default function MediaPage() {
       setError(null);
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        
+        // Ambil info paket
+        const pkgRes = await fetch(`${backendUrl}/api/radio/station/${selectedStation.id}/package`);
+        const pkgJson = await pkgRes.json();
+        if (pkgJson.success) {
+          setPackageType(pkgJson.package);
+          if (pkgJson.song_limit !== undefined) setSongLimit(pkgJson.song_limit);
+        }
+
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
         const json = await res.json();
         
@@ -199,6 +211,9 @@ export default function MediaPage() {
   const handleDownload = async () => {
     if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
     if (!ytUrl) return toast.error("Masukkan URL terlebih dahulu");
+    if (mediaFiles.length >= songLimit) {
+      return toast.error(`Limit paket tercapai! Maksimal lagu untuk paket ${packageType} adalah ${songLimit}.`);
+    }
     setIsDownloading(true);
     setDownloadProgress(0);
     setStatusText("Menghubungkan ke server...");
@@ -280,6 +295,9 @@ export default function MediaPage() {
     if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
     if (!file.type.startsWith('audio/')) {
       return toast.error("Hanya file audio yang diizinkan!");
+    }
+    if (mediaFiles.length >= songLimit) {
+      return toast.error(`Limit paket tercapai! Maksimal lagu untuk paket ${packageType} adalah ${songLimit}.`);
     }
     // Batasan ukuran file (20MB) yang setara dengan durasi 10-15 menit untuk menghemat RAM
     if (file.size > 20 * 1024 * 1024) {

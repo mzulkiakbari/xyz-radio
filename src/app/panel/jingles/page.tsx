@@ -42,7 +42,8 @@ export default function JinglesPage() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
   
-  const [packageType, setPackageType] = useState<"Personal" | "Business" | "Corporate">("Personal");
+  const [packageType, setPackageType] = useState<string>("Personal");
+  const [canSetJingleFreq, setCanSetJingleFreq] = useState<boolean>(false);
   const [jingleLimit, setJingleLimit] = useState<number>(1);
   const [adsList, setAdsList] = useState<MediaFile[]>([]);
   const [selectedAds, setSelectedAds] = useState<string[]>([]);
@@ -73,6 +74,7 @@ export default function JinglesPage() {
         if (pkgJson.success) {
           setPackageType(pkgJson.package);
           if (pkgJson.jingle_limit !== undefined) setJingleLimit(pkgJson.jingle_limit);
+          if (pkgJson.can_set_jingle_freq !== undefined) setCanSetJingleFreq(pkgJson.can_set_jingle_freq);
         }
 
         const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/playlists?s=${selectedStation.serverUrl}`);
@@ -101,11 +103,11 @@ export default function JinglesPage() {
   }, [selectedStation, backendUrl]);
 
   useEffect(() => {
-    if (packageType === "Personal") {
+    if (!canSetJingleFreq) {
       setScheduleType("once_per_x_songs");
       setScheduleValue(1);
     }
-  }, [packageType]);
+  }, [canSetJingleFreq]);
 
   const adLimit = jingleLimit;
   const canUpload = adsList.length < adLimit;
@@ -451,7 +453,7 @@ export default function JinglesPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      disabled={packageType === "Personal"}
+                      disabled={!canSetJingleFreq}
                       onClick={() => setScheduleType("once_per_x_songs")}
                       className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
                         scheduleType === "once_per_x_songs" 
@@ -463,7 +465,7 @@ export default function JinglesPage() {
                     </button>
                     <button
                       type="button"
-                      disabled={packageType === "Personal"}
+                      disabled={!canSetJingleFreq}
                       onClick={() => setScheduleType("once_per_x_minutes")}
                       className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
                         scheduleType === "once_per_x_minutes" 
@@ -483,7 +485,7 @@ export default function JinglesPage() {
                   <input
                     type="number"
                     min="1"
-                    disabled={packageType === "Personal"}
+                    disabled={!canSetJingleFreq}
                     value={scheduleValue}
                     onChange={(e) => setScheduleValue(parseInt(e.target.value) || 1)}
                     className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors disabled:opacity-50"
