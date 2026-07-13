@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function DJPanelV2({ params }: { params: { id: string } }) {
-  const rawId = params.id;
+export default function DJPanelV2() {
+  const params = useParams();
+  const rawId = params?.id as string;
   const [radioId, setRadioId] = useState<string | null>(null);
 
   const [state, setState] = useState<any>(null);
