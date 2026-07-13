@@ -18,6 +18,7 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const resolveId = async () => {
+        if (!rawId) return;
         // Cek apakah rawId adalah AzuraCast ID (angka) atau UUID via API backend
         if (!rawId.includes("-")) {
             try {
