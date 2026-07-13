@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     if (!id) return new NextResponse("Missing id", { status: 400 });
     
     try {
-        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         if (!serviceKey) return new NextResponse("Server configuration error", { status: 500 });
         
         const supabaseAdmin = createClient(
@@ -21,10 +21,15 @@ export async function GET(request: Request) {
             serviceKey
         );
         
-        const { data: radios } = await supabaseAdmin
+        const { data: radios, error } = await supabaseAdmin
             .from('radio_orders')
             .select('id, radio_name')
-            .order('created_at', { ascending: true });
+            .order('start_date', { ascending: true });
+            
+        if (error) {
+            console.error("DB Error in slug route:", error);
+            return new NextResponse("DB Error", { status: 500 });
+        }
             
         let finalSlug = "radio";
         if (radios) {
