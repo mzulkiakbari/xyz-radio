@@ -54,9 +54,10 @@ export async function GET(request: Request) {
         
         if (radioData && radioData.id) {
             // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
-            let backendUrl = radioData.server_url;
+            // Kita abaikan server_url dari DB karena masih URL Azuracast lama
+            let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
             if (!backendUrl) {
-                backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+                backendUrl = "http://187.127.122.199:8999";
             }
             backendUrl = backendUrl.replace(/\/api$/, '');
             return NextResponse.redirect(`${backendUrl}/v2/stream/${radioData.id}`);

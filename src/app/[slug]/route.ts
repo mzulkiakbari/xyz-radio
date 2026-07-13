@@ -58,10 +58,13 @@ export async function GET(request: Request, context: any) {
     }
 
     // Redirect ke V2 Stream
-    // Gunakan server_url dari database radio jika ada, kalau tidak fallback ke env variables
-    let backendUrl = targetRadio.server_url;
+    // Karena sudah tidak pakai Azuracast, kita abaikan server_url dari DB yang mengarah ke s1.radio dll.
+    // Kita gunakan NEXT_PUBLIC_BACKEND_URL dari env Vercel.
+    let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    
     if (!backendUrl) {
-        backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+        // Fallback sementara jika NEXT_PUBLIC_BACKEND_URL belum diatur di Vercel
+        backendUrl = "http://187.127.122.199:8999"; 
     }
     
     // Pastikan backendUrl tidak berakhiran /api
