@@ -110,7 +110,7 @@ export default function JinglesPage() {
   }, [canSetJingleFreq]);
 
   const adLimit = jingleLimit;
-  const canUpload = adsList.length < adLimit;
+  const canUpload = adLimit === 0 || adsList.length < adLimit;
 
   const handleCreatePlaylist = async () => {
     if (!selectedStation) return;
@@ -422,7 +422,7 @@ export default function JinglesPage() {
         </div>
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-xl text-sm">
           <span className="block text-blue-600 dark:text-blue-400 font-bold mb-1">Paket {packageType}</span>
-          <span className="text-zinc-600 dark:text-zinc-400">Limit Iklan: {adsList.length}/{adLimit}</span>
+          <span className="text-zinc-600 dark:text-zinc-400">Limit Iklan: {adsList.length}/{adLimit === 0 ? "Unlimited" : adLimit}</span>
         </div>
       </header>
 

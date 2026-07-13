@@ -211,7 +211,7 @@ export default function MediaPage() {
   const handleDownload = async () => {
     if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
     if (!ytUrl) return toast.error("Masukkan URL terlebih dahulu");
-    if (mediaFiles.length >= songLimit) {
+    if (songLimit > 0 && mediaFiles.length >= songLimit) {
       return toast.error(`Limit paket tercapai! Maksimal lagu untuk paket ${packageType} adalah ${songLimit}.`);
     }
     setIsDownloading(true);
@@ -296,7 +296,7 @@ export default function MediaPage() {
     if (!file.type.startsWith('audio/')) {
       return toast.error("Hanya file audio yang diizinkan!");
     }
-    if (mediaFiles.length >= songLimit) {
+    if (songLimit > 0 && mediaFiles.length >= songLimit) {
       return toast.error(`Limit paket tercapai! Maksimal lagu untuk paket ${packageType} adalah ${songLimit}.`);
     }
     // Batasan ukuran file (20MB) yang setara dengan durasi 10-15 menit untuk menghemat RAM
