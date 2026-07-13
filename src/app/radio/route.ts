@@ -4,10 +4,31 @@ import { supabase } from "@/lib/supabase"; // Pastikan path ini benar jika file 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const serverParam = searchParams.get("s");
 
   if (!id) {
     return new NextResponse("Missing Radio ID", { status: 400 });
   }
+
+  // Tentukan URL Server berdasarkan parameter 's'
+  let rawServerUrl = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+
+  if (serverParam) {
+    if (serverParam === "s1") {
+      rawServerUrl = process.env.RADIO2_API_URL || "https://s1.radio.xyz-sa.site";
+    } else if (!serverParam.includes(".")) {
+      rawServerUrl = `https://${serverParam}.radio.xyz-sa.site`;
+    } else {
+      rawServerUrl = serverParam;
+    }
+  }
+
+  if (!rawServerUrl.startsWith("http")) {
+    rawServerUrl = `https://${rawServerUrl}`;
+  }
+  
+  const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
+  const serverHostname = new URL(rawServerUrl).hostname; // e.g. "s1.radio.xyz-sa.site"
 
   try {
     // 1. Coba cari UUID di Supabase (V2)
@@ -16,9 +37,11 @@ export async function GET(request: Request) {
         query = query.eq('id', id);
     } else {
         query = query.eq('azuracast_station_id', parseInt(id));
+        // Cocokkan juga dengan hostname servernya karena ada azuracast_station_id yang dobel di server berbeda
+        query = query.ilike('server_url', `%${serverHostname}%`);
     }
     
-    const { data: radioData } = await query.single();
+    const { data: radioData } = await query.limit(1).maybeSingle();
     
     if (radioData && radioData.id) {
         // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
@@ -31,24 +54,6 @@ export async function GET(request: Request) {
   }
 
   // 2. Fallback ke AzuraCast (V1) jika tidak ditemukan di DB V2
-  const serverParam = searchParams.get("s");
-  let rawServerUrl = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
-
-  if (serverParam) {
-    if (serverParam === "s1") {
-      rawServerUrl = process.env.RADIO2_API_URL || "https://s1.radio.xyz-sa.site";
-    } else if (!serverParam.includes(".")) {
-      rawServerUrl = `${serverParam}.radio.xyz-sa.site`;
-    } else {
-      rawServerUrl = serverParam;
-    }
-  }
-
-  if (!rawServerUrl.startsWith("http")) {
-    rawServerUrl = `https://${rawServerUrl}`;
-  }
-  const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
-
   try {
     const infoResponse = await fetch(`${RADIO_API_URL}/api/nowplaying/${id}`);
 
