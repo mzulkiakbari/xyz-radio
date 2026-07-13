@@ -50,6 +50,8 @@ export default function MediaPage() {
   }, []);
 
   const [ytUrl, setYtUrl] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
@@ -264,15 +266,38 @@ export default function MediaPage() {
           }
         }
       }
-
-      if (isSuccess) {
-        reloadMedia();
-      }
     } catch (err) {
       toast.error("Error: " + err);
     } finally {
       setIsDownloading(false);
+      setDownloadProgress(0);
+      setStatusText("");
     }
+  };
+
+  const handleSearch = async () => {
+    if (!ytUrl.trim()) return;
+    if (ytUrl.startsWith('http')) {
+        handleDownload();
+        return;
+    }
+    
+    setIsSearching(true);
+    setSearchResults([]);
+    try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const res = await fetch(`${backendUrl}/v2/media/search?q=${encodeURIComponent(ytUrl)}`);
+        const json = await res.json();
+        if (json.success) {
+            setSearchResults(json.results);
+            if (json.results.length === 0) toast.error("Tidak ada hasil ditemukan.");
+        } else {
+            toast.error(json.error || "Gagal mencari lagu");
+        }
+    } catch(e) {
+        toast.error("Error network saat mencari");
+    }
+    setIsSearching(false);
   };
 
   const handleClearQueue = async () => {
@@ -627,10 +652,10 @@ export default function MediaPage() {
                     <p className="text-sm font-medium">Download audio directly from YouTube or Spotify URLs.</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-300">Media URL</label>
+                    <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-300">Media URL / Search</label>
                     <input
                       type="text"
-                      placeholder="https://youtube.com/watch?v=..."
+                      placeholder="https://youtube.com/watch?v=... or search title"
                       value={ytUrl}
                       onChange={(e) => setYtUrl(e.target.value)}
                       disabled={isDownloading}
@@ -654,32 +679,43 @@ export default function MediaPage() {
                   )}
                   <div className="flex gap-2">
                     <button 
-                      onClick={handleDownload}
-                      disabled={isDownloading}
-                      className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                      onClick={handleSearch}
+                      disabled={isDownloading || isSearching}
+                      className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
                     >
-                      {isDownloading ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="w-5 h-5" />
-                          Extract Audio
-                        </>
-                      )}
+                      {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                      Cari / Fetch URL
                     </button>
-                    <button 
-                      onClick={handleClearQueue}
-                      className="whitespace-nowrap bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 px-4 rounded-xl transition-colors flex justify-center items-center gap-2"
-                    >
-                      Hapus Antrean
-                    </button>
+                    {ytUrl.startsWith('http') && (
+                        <button 
+                          onClick={handleDownload}
+                          disabled={isDownloading}
+                          className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                        >
+                          {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <MonitorPlay className="w-5 h-5" />}
+                          Download
+                        </button>
+                    )}
                   </div>
+
+                  {searchResults.length > 0 && (
+                      <div className="mt-4 space-y-2 max-h-64 overflow-y-auto pr-2">
+                          {searchResults.map((res, i) => (
+                              <div key={i} className="flex justify-between items-center bg-zinc-100 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                                  <div className="overflow-hidden">
+                                      <p className="font-semibold text-sm truncate">{res.title}</p>
+                                      <p className="text-xs text-zinc-500 truncate">{res.author} • {res.duration}</p>
+                                  </div>
+                                  <button 
+                                      onClick={() => { setYtUrl(res.url); handleDownload(); }}
+                                      className="ml-4 bg-red-600 hover:bg-red-500 text-white p-2 rounded-lg flex-shrink-0"
+                                  >
+                                      <MonitorPlay className="w-4 h-4" />
+                                  </button>
+                              </div>
+                          ))}
+                      </div>
+                  )}
                 </div>
               )}
             </div>
