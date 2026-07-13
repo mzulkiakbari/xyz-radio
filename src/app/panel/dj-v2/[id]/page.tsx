@@ -22,7 +22,8 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
         // Cek apakah rawId adalah AzuraCast ID (angka) atau UUID via API backend
         if (!rawId.includes("-")) {
             try {
-                const res = await fetch(`/api/radio/resolve-id?id=${rawId}`);
+                const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+                const res = await fetch(`${backendUrl}/api/radio/resolve-id?id=${rawId}`);
                 const json = await res.json();
                 console.log("DEBUG: resolve-id response:", json);
                 if (json.success && json.uuid) {
