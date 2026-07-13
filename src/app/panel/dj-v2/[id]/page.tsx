@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
@@ -18,10 +18,17 @@ export default function DJPanelV2() {
   
   const [activeTab, setActiveTab] = useState<"lagu" | "jingle">("lagu");
   
+  // Pagination
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  
   // Modals & Action State
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [showPlayModal, setShowPlayModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [trackToDelete, setTrackToDelete] = useState<{trackId: string, title: string} | null>(null);
   
   // Upload State
   const [uploadTab, setUploadTab] = useState<"local" | "youtube">("local");
@@ -65,6 +72,63 @@ export default function DJPanelV2() {
     resolveId();
   }, [rawId, backendUrl]);
 
+  const fetchPlaylists = useCallback(async (pageNum: number, append: boolean = false) => {
+    if (!radioId) return;
+    setIsLoadingMore(true);
+    const isJingle = activeTab === 'jingle';
+    const limit = 25;
+    const from = pageNum * limit;
+    const to = from + limit - 1;
+    
+    const { data } = await supabase
+        .from("radio_playlist_items_v2")
+        .select("id, is_jingle, radio_tracks_v2(*)")
+        .eq("radio_id", radioId)
+        .eq("is_jingle", isJingle)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+        
+    if (data) {
+        if (append) {
+            setPlaylists(prev => {
+                // Mencegah duplikasi data jika trigger dobel
+                const newIds = new Set(data.map(d => d.id));
+                const filteredPrev = prev.filter(p => !newIds.has(p.id));
+                return [...filteredPrev, ...data];
+            });
+        } else {
+            setPlaylists(data);
+        }
+        setHasMore(data.length === limit);
+    }
+    setIsLoadingMore(false);
+  }, [radioId, activeTab]);
+
+  useEffect(() => {
+      if (radioId) {
+          setPage(0);
+          setHasMore(true);
+          fetchPlaylists(0, false);
+      }
+  }, [radioId, activeTab, fetchPlaylists]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+      const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+              setPage(p => p + 1);
+          }
+      }, { threshold: 0.1 });
+      
+      const currentRef = loaderRef.current;
+      if (currentRef) observer.observe(currentRef);
+      return () => { if (currentRef) observer.unobserve(currentRef); };
+  }, [hasMore, isLoadingMore]);
+
+  useEffect(() => {
+      if (page > 0) fetchPlaylists(page, true);
+  }, [page, fetchPlaylists]);
+
   useEffect(() => {
     if (!radioId) return;
     fetchData(radioId);
@@ -76,12 +140,18 @@ export default function DJPanelV2() {
           fetchCurrentTrack((payload.new as any).current_track_id);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "radio_queues_v2", filter: `radio_id=eq.${radioId}` }, () => fetchQueues(radioId))
-      .on("postgres_changes", { event: "*", schema: "public", table: "radio_playlist_items_v2", filter: `radio_id=eq.${radioId}` }, () => fetchData(radioId))
-      .on("postgres_changes", { event: "*", schema: "public", table: "radio_tracks_v2" }, () => fetchData(radioId))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "radio_playlist_items_v2", filter: `radio_id=eq.${radioId}` }, (payload) => {
+          setPlaylists(prev => prev.filter(p => p.id !== payload.old.id));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "radio_playlist_items_v2", filter: `radio_id=eq.${radioId}` }, () => {
+          // Restart fetch ke halaman pertama untuk mendapatkan relasi join
+          setPage(0);
+          fetchPlaylists(0, false);
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [radioId]);
+  }, [radioId, fetchPlaylists]);
 
   const fetchJingleSettings = async (id: string) => {
       const { data } = await supabase.from('radio_orders').select('jingle_interval').eq('id', id).single();
@@ -104,8 +174,6 @@ export default function DJPanelV2() {
         if (st.current_track_id) fetchCurrentTrack(st.current_track_id);
     }
     await fetchQueues(id);
-    const { data: pl } = await supabase.from("radio_playlist_items_v2").select("id, is_jingle, radio_tracks_v2(*)").eq("radio_id", id);
-    if (pl) setPlaylists(pl);
   };
 
   const fetchQueues = async (id: string = radioId!) => {
@@ -199,16 +267,22 @@ export default function DJPanelV2() {
       setIsProcessing(false);
   };
 
-  const handleDelete = async (trackId: string) => {
-      if (!confirm("Hapus lagu ini dari playlist?")) return;
+  const handleDeleteConfirm = async () => {
+      if (!trackToDelete) return;
       setIsProcessing(true);
       try {
-          const res = await fetch(`${backendUrl}/v2/media/${radioId}/${trackId}`, { method: 'DELETE' });
+          const res = await fetch(`${backendUrl}/v2/media/${radioId}/${trackToDelete.trackId}`, { method: 'DELETE' });
           const json = await res.json();
-          if (json.success) toast.success("Berhasil dihapus");
-          else toast.error(json.error);
+          if (json.success) {
+              toast.success("Berhasil dihapus");
+              // Optimistic update
+              setPlaylists(prev => prev.filter(p => p.radio_tracks_v2?.id !== trackToDelete.trackId));
+          } else {
+              toast.error(json.error);
+          }
       } catch (e) { toast.error("Error network"); }
       setIsProcessing(false);
+      setTrackToDelete(null);
   };
 
   const handleEditSave = async () => {
@@ -223,12 +297,12 @@ export default function DJPanelV2() {
           if (json.success) {
               toast.success("Berhasil diupdate");
               setEditingTrack(null);
+              // Optimistic edit
+              setPlaylists(prev => prev.map(p => p.radio_tracks_v2?.id === editingTrack.id ? { ...p, radio_tracks_v2: { ...p.radio_tracks_v2, title: editTitle, artist: editArtist } } : p));
           } else toast.error(json.error);
       } catch (e) { toast.error("Error network"); }
       setIsProcessing(false);
   };
-
-  const activePlaylists = playlists.filter(p => activeTab === 'jingle' ? p.is_jingle : !p.is_jingle);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
@@ -289,11 +363,11 @@ export default function DJPanelV2() {
             </div>
           </div>
           
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-            {activePlaylists.length === 0 ? (
+          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            {playlists.length === 0 && !isLoadingMore ? (
                 <div className="text-center text-gray-400 py-8">Belum ada data di tab ini.</div>
             ) : (
-                activePlaylists.map((item) => (
+                playlists.map((item) => (
                     <div key={item.id} className="flex justify-between items-center bg-gray-700 p-3 rounded hover:bg-gray-600 transition group relative">
                         <div className="flex flex-col flex-1 overflow-hidden">
                             <span className="truncate font-bold text-white">{item.radio_tracks_v2?.title}</span>
@@ -309,10 +383,10 @@ export default function DJPanelV2() {
                                 </button>
                                 {dropdownOpenId === item.id && (
                                     <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded shadow-xl z-10">
-                                        <button onClick={() => { setEditingTrack(item.radio_tracks_v2); setEditTitle(item.radio_tracks_v2.title); setEditArtist(item.radio_tracks_v2.artist || ""); setDropdownOpenId(null); }} className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-700 transition">
+                                        <button onClick={() => { setEditingTrack(item.radio_tracks_v2); setEditTitle(item.radio_tracks_v2?.title); setEditArtist(item.radio_tracks_v2?.artist || ""); setDropdownOpenId(null); }} className="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-700 transition">
                                             <Edit2 size={14} className="mr-2" /> Edit Metadata
                                         </button>
-                                        <button onClick={() => { handleDelete(item.radio_tracks_v2.id); setDropdownOpenId(null); }} className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition">
+                                        <button onClick={() => { setTrackToDelete({ trackId: item.radio_tracks_v2?.id, title: item.radio_tracks_v2?.title }); setDropdownOpenId(null); }} className="flex items-center w-full px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition">
                                             <Trash2 size={14} className="mr-2" /> Hapus
                                         </button>
                                     </div>
@@ -321,6 +395,17 @@ export default function DJPanelV2() {
                         </div>
                     </div>
                 ))
+            )}
+            
+            {hasMore && (
+                <div ref={loaderRef} className="py-4 text-center text-gray-400">
+                    <Loader2 className="animate-spin inline-block" size={24} />
+                </div>
+            )}
+            {!hasMore && playlists.length > 0 && (
+                <div className="py-4 text-center text-gray-500 text-sm">
+                    Sudah menampilkan semua data.
+                </div>
             )}
           </div>
         </div>
@@ -335,6 +420,23 @@ export default function DJPanelV2() {
               <button onClick={() => handlePlayAction('now')} className="bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold w-full transition">⚡ Putar Sekarang (Interrupt)</button>
               <button onClick={() => handlePlayAction('queue')} className="bg-gray-600 hover:bg-gray-500 py-3 rounded font-bold w-full transition">⏳ Masukkan ke Antrian</button>
               <button onClick={() => setShowPlayModal(false)} className="bg-red-600 hover:bg-red-500 py-2 rounded w-full transition mt-2">Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL HAPUS (GANTI WINDOW.CONFIRM) */}
+      {trackToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 max-w-md w-full text-center">
+            <Trash2 className="mx-auto text-red-500 mb-4" size={48} />
+            <h3 className="text-xl font-bold mb-2 text-white">Hapus Media Ini?</h3>
+            <p className="text-gray-400 text-sm mb-6">Apakah Anda yakin ingin menghapus lagu <span className="text-white font-bold">{trackToDelete.title}</span> dari playlist? Tindakan ini tidak dapat dibatalkan.</p>
+            <div className="flex space-x-3">
+              <button onClick={handleDeleteConfirm} disabled={isProcessing} className="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold transition flex items-center justify-center">
+                  {isProcessing ? <Loader2 className="animate-spin mr-2" size={16}/> : "Ya, Hapus"}
+              </button>
+              <button onClick={() => setTrackToDelete(null)} disabled={isProcessing} className="flex-1 bg-gray-600 hover:bg-gray-500 py-2 rounded font-bold transition">Batal</button>
             </div>
           </div>
         </div>

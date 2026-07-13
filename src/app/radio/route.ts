@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase"; // Pastikan path ini benar jika file tsconfig.json menggunakan @/
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,9 +9,29 @@ export async function GET(request: Request) {
     return new NextResponse("Missing Radio ID", { status: 400 });
   }
 
-  const serverParam = searchParams.get("s");
+  try {
+    // 1. Coba cari UUID di Supabase (V2)
+    let query = supabase.from('radio_orders').select('id');
+    if (id.includes('-')) {
+        query = query.eq('id', id);
+    } else {
+        query = query.eq('azuracast_station_id', parseInt(id));
+    }
+    
+    const { data: radioData } = await query.single();
+    
+    if (radioData && radioData.id) {
+        // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+        return NextResponse.redirect(`${backendUrl}/v2/stream/${radioData.id}`);
+    }
 
-  // Ambil RADIO_API_URL dari environment atau parameter s
+  } catch (err) {
+    console.error("V2 Proxy Error:", err);
+  }
+
+  // 2. Fallback ke AzuraCast (V1) jika tidak ditemukan di DB V2
+  const serverParam = searchParams.get("s");
   let rawServerUrl = process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
 
   if (serverParam) {
@@ -29,7 +50,6 @@ export async function GET(request: Request) {
   const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
 
   try {
-    // Ambil detail stasiun radio dari public API Azuracast
     const infoResponse = await fetch(`${RADIO_API_URL}/api/nowplaying/${id}`);
 
     if (!infoResponse.ok) {
@@ -43,9 +63,6 @@ export async function GET(request: Request) {
       return new NextResponse("Stream URL not found", { status: 404 });
     }
 
-    // Jangan pipe response stream ke client melalui Next.js (sebagai Proxy)
-    // karena Next.js memiliki limit timeout 5 menit (300 detik) untuk request!
-    // Sebaiknya langsung redirect URL icecast ke client agar browser yang memutar.
     const secureListenUrl = listenUrl.replace('http://', 'https://');
     return NextResponse.redirect(secureListenUrl);
 
