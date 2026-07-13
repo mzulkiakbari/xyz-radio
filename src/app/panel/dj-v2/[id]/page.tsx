@@ -175,11 +175,6 @@ export default function DJPanelV2() {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        {/* DEBUG BAR */}
-        <div className="bg-red-900 text-xs text-white p-2 rounded">
-          <strong>DEBUG:</strong> rawId=[{rawId}] radioId=[{radioId}] state=[{state ? 'Loaded' : 'Null'}] {debugInfo}
-        </div>
-
         {/* Winamp Top Header: Now Playing */}
         <div className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 shadow-2xl">
           <h1 className="text-3xl font-bold text-center text-green-400 mb-2">DJ PANEL V2</h1>
