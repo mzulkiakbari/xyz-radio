@@ -30,31 +30,36 @@ export async function GET(request: Request) {
   const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
   const serverHostname = new URL(rawServerUrl).hostname; // e.g. "s1.radio.xyz-sa.site"
 
-  // Inisialisasi Supabase dengan Service Role Key untuk bypass RLS (karena ANON terblokir dari radio_orders)
-  const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
   try {
-    // 1. Coba cari UUID di Supabase (V2)
-    let query = supabaseAdmin.from('radio_orders').select('id');
-    if (id.includes('-')) {
-        query = query.eq('id', id);
+    // Inisialisasi Supabase dengan Service Role Key untuk bypass RLS
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    if (serviceKey) {
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            serviceKey
+        );
+        
+        // 1. Coba cari UUID di Supabase (V2)
+        let query = supabaseAdmin.from('radio_orders').select('id');
+        if (id.includes('-')) {
+            query = query.eq('id', id);
+        } else {
+            query = query.eq('azuracast_station_id', parseInt(id));
+            query = query.ilike('server_url', `%${serverHostname}%`);
+        }
+        
+        const { data: radioData, error: dbErr } = await query.limit(1).maybeSingle();
+        
+        if (dbErr) console.error("DB Error V2:", dbErr);
+        
+        if (radioData && radioData.id) {
+            // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+            return NextResponse.redirect(`${backendUrl}/v2/stream/${radioData.id}`);
+        }
     } else {
-        query = query.eq('azuracast_station_id', parseInt(id));
-        // Cocokkan juga dengan hostname servernya karena ada azuracast_station_id yang dobel di server berbeda
-        query = query.ilike('server_url', `%${serverHostname}%`);
+        console.error("V2 Proxy Error: SUPABASE_SERVICE_ROLE_KEY is missing from environment variables!");
     }
-    
-    const { data: radioData } = await query.limit(1).maybeSingle();
-    
-    if (radioData && radioData.id) {
-        // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
-        return NextResponse.redirect(`${backendUrl}/v2/stream/${radioData.id}`);
-    }
-
   } catch (err) {
     console.error("V2 Proxy Error:", err);
   }
