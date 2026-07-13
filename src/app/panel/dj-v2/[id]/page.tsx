@@ -18,12 +18,17 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const resolveId = async () => {
-        // Cek apakah rawId adalah AzuraCast ID (angka) atau UUID
+        // Cek apakah rawId adalah AzuraCast ID (angka) atau UUID via API backend
         if (!rawId.includes("-")) {
-            const { data } = await supabase.from("radio_orders").select("id").eq("azuracast_station_id", rawId).single();
-            if (data) {
-                setRadioId(data.id);
-                return;
+            try {
+                const res = await fetch(`/api/radio/resolve-id?id=${rawId}`);
+                const json = await res.json();
+                if (json.success && json.uuid) {
+                    setRadioId(json.uuid);
+                    return;
+                }
+            } catch (e) {
+                console.error("Gagal resolve ID:", e);
             }
         }
         setRadioId(rawId);
