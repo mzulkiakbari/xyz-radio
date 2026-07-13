@@ -12,6 +12,9 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [currentTrack, setCurrentTrack] = useState<any>(null);
   
+  // Debug State
+  const [debugInfo, setDebugInfo] = useState<string>("");
+  
   // Modal State
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -99,6 +102,8 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
       .eq("is_jingle", false);
     
     console.log("DEBUG: Playlist response:", { pl, plErr, id });
+    setDebugInfo(prev => prev + ` | PL: ${pl?.length || 0} items`);
+    if (plErr) setDebugInfo(prev => prev + ` | PLError: ${plErr.message}`);
     
     if (pl) setPlaylists(pl);
   };
@@ -111,6 +116,7 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
       .order("position", { ascending: true });
     
     console.log("DEBUG: Queues response:", { q, qErr, id });
+    if (qErr) setDebugInfo(prev => prev + ` | QError: ${qErr.message}`);
     
     if (q) setQueues(q);
   };
@@ -167,6 +173,11 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         
+        {/* DEBUG BAR */}
+        <div className="bg-red-900 text-xs text-white p-2 rounded">
+          <strong>DEBUG:</strong> rawId=[{rawId}] radioId=[{radioId}] state=[{state ? 'Loaded' : 'Null'}] {debugInfo}
+        </div>
+
         {/* Winamp Top Header: Now Playing */}
         <div className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 shadow-2xl">
           <h1 className="text-3xl font-bold text-center text-green-400 mb-2">DJ PANEL V2</h1>
