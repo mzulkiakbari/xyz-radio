@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase"; // Pastikan path ini benar jika file tsconfig.json menggunakan @/
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,9 +30,15 @@ export async function GET(request: Request) {
   const RADIO_API_URL = rawServerUrl.replace(/\/api$/, '');
   const serverHostname = new URL(rawServerUrl).hostname; // e.g. "s1.radio.xyz-sa.site"
 
+  // Inisialisasi Supabase dengan Service Role Key untuk bypass RLS (karena ANON terblokir dari radio_orders)
+  const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     // 1. Coba cari UUID di Supabase (V2)
-    let query = supabase.from('radio_orders').select('id');
+    let query = supabaseAdmin.from('radio_orders').select('id');
     if (id.includes('-')) {
         query = query.eq('id', id);
     } else {
