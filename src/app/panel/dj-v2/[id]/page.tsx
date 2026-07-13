@@ -24,6 +24,7 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
             try {
                 const res = await fetch(`/api/radio/resolve-id?id=${rawId}`);
                 const json = await res.json();
+                console.log("DEBUG: resolve-id response:", json);
                 if (json.success && json.uuid) {
                     setRadioId(json.uuid);
                     return;
@@ -86,21 +87,26 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
     await fetchQueues(id);
 
     // 3. Fetch Playlist (Media List)
-    const { data: pl } = await supabase
+    const { data: pl, error: plErr } = await supabase
       .from("radio_playlist_items_v2")
       .select("*, radio_tracks_v2(*)")
       .eq("radio_id", id)
       .eq("is_jingle", false);
     
+    console.log("DEBUG: Playlist response:", { pl, plErr, id });
+    
     if (pl) setPlaylists(pl);
   };
 
   const fetchQueues = async (id: string = radioId as string) => {
-    const { data: q } = await supabase
+    const { data: q, error: qErr } = await supabase
       .from("radio_queues_v2")
       .select("*, radio_tracks_v2(*)")
       .eq("radio_id", id)
       .order("position", { ascending: true });
+    
+    console.log("DEBUG: Queues response:", { q, qErr, id });
+    
     if (q) setQueues(q);
   };
 
