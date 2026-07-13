@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function DJPanelV2({ params }: { params: { id: string } }) {
-  const radioId = params.id;
+  const rawId = params.id;
+  const [radioId, setRadioId] = useState<string | null>(null);
 
   const [state, setState] = useState<any>(null);
   const [queues, setQueues] = useState<any[]>([]);
@@ -16,7 +17,24 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    const resolveId = async () => {
+        // Cek apakah rawId adalah AzuraCast ID (angka) atau UUID
+        if (!rawId.includes("-")) {
+            const { data } = await supabase.from("radio_orders").select("id").eq("azuracast_station_id", rawId).single();
+            if (data) {
+                setRadioId(data.id);
+                return;
+            }
+        }
+        setRadioId(rawId);
+    };
+    resolveId();
+  }, [rawId]);
+
+  useEffect(() => {
+    if (!radioId) return;
+
+    fetchData(radioId);
 
     // Setup Supabase Realtime
     const channel = supabase.channel(`radio_${radioId}`)
@@ -36,6 +54,13 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
           fetchQueues();
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "radio_playlist_items_v2", filter: `radio_id=eq.${radioId}` },
+        () => {
+          fetchData(radioId); // Fetch ulang playlist jika ada perubahan
+        }
+      )
       .subscribe();
 
     return () => {
@@ -43,32 +68,32 @@ export default function DJPanelV2({ params }: { params: { id: string } }) {
     };
   }, [radioId]);
 
-  const fetchData = async () => {
+  const fetchData = async (id: string) => {
     // 1. Fetch State
-    const { data: st } = await supabase.from("radio_states_v2").select("*").eq("radio_id", radioId).single();
+    const { data: st } = await supabase.from("radio_states_v2").select("*").eq("radio_id", id).single();
     if (st) {
         setState(st);
         if (st.current_track_id) fetchCurrentTrack(st.current_track_id);
     }
     
     // 2. Fetch Queues
-    await fetchQueues();
+    await fetchQueues(id);
 
     // 3. Fetch Playlist (Media List)
     const { data: pl } = await supabase
       .from("radio_playlist_items_v2")
       .select("*, radio_tracks_v2(*)")
-      .eq("radio_id", radioId)
+      .eq("radio_id", id)
       .eq("is_jingle", false);
     
     if (pl) setPlaylists(pl);
   };
 
-  const fetchQueues = async () => {
+  const fetchQueues = async (id: string = radioId as string) => {
     const { data: q } = await supabase
       .from("radio_queues_v2")
       .select("*, radio_tracks_v2(*)")
-      .eq("radio_id", radioId)
+      .eq("radio_id", id)
       .order("position", { ascending: true });
     if (q) setQueues(q);
   };
