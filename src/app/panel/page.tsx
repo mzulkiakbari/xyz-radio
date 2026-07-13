@@ -10,7 +10,45 @@ import { useStation } from "@/components/StationContext";
 export default function OverviewPage() {
   const router = useRouter();
   const { selectedStation } = useStation();
-  const radioId = selectedStation?.id;
+  
+  const [radioId, setRadioId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const resolveRadioId = async () => {
+        if (!selectedStation) {
+            setRadioId(null);
+            return;
+        }
+        
+        let serverParam = "";
+        if (selectedStation.serverUrl) {
+            if (selectedStation.serverUrl.includes("s1.radio")) {
+                serverParam = "&s=s1";
+            } else if (!selectedStation.serverUrl.includes("radio.xyz-sa.site") || selectedStation.serverUrl !== "https://radio.xyz-sa.site") {
+                const rawDomain = selectedStation.serverUrl.replace("https://", "").replace("http://", "");
+                if (rawDomain !== "radio.xyz-sa.site") {
+                    serverParam = `&s=${rawDomain}`;
+                }
+            }
+        }
+        
+        try {
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+            // Hit the existing Express endpoint to get UUID
+            const res = await fetch(`${backendUrl}/api/radio/resolve-id?id=${selectedStation.id}${serverParam}`);
+            const json = await res.json();
+            if (json.success && json.uuid) {
+                setRadioId(json.uuid);
+            } else {
+                setRadioId(null);
+            }
+        } catch (e) {
+            console.error("Gagal resolve UUID:", e);
+            setRadioId(null);
+        }
+    };
+    resolveRadioId();
+  }, [selectedStation]);
 
   const [copied, setCopied] = useState(false);
   const [appUrl, setAppUrl] = useState("");
@@ -51,6 +89,7 @@ export default function OverviewPage() {
 
   // Jingle Settings
   const [jingleInterval, setJingleInterval] = useState(3);
+  const [jingleCount, setJingleCount] = useState(1);
   const [showJingleSettings, setShowJingleSettings] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
@@ -138,21 +177,24 @@ export default function OverviewPage() {
     return () => { supabase.removeChannel(channel); };
   }, [radioId, fetchPlaylists]);
 
-  const fetchJingleSettings = async (id: number) => {
-      const { data } = await supabase.from('radio_orders').select('jingle_interval').eq('id', id).single();
-      if (data && data.jingle_interval) setJingleInterval(data.jingle_interval);
+  const fetchJingleSettings = async (id: string) => {
+      const { data } = await supabase.from('radio_orders').select('jingle_interval, jingle_count').eq('id', id).single();
+      if (data) {
+          if (data.jingle_interval) setJingleInterval(data.jingle_interval);
+          if (data.jingle_count) setJingleCount(data.jingle_count);
+      }
   };
 
   const saveJingleSettings = async () => {
       setIsProcessing(true);
-      const { error } = await supabase.from('radio_orders').update({ jingle_interval: jingleInterval }).eq('id', radioId);
+      const { error } = await supabase.from('radio_orders').update({ jingle_interval: jingleInterval, jingle_count: jingleCount }).eq('id', radioId);
       setIsProcessing(false);
       if (error) toast.error("Gagal menyimpan pengaturan jingle");
       else toast.success("Pengaturan jingle disimpan!");
       setShowJingleSettings(false);
   };
 
-  const fetchData = async (id: number) => {
+  const fetchData = async (id: string) => {
     const { data: st } = await supabase.from("radio_states_v2").select("*").eq("radio_id", id).single();
     if (st) {
         setState(st);
@@ -161,7 +203,7 @@ export default function OverviewPage() {
     await fetchQueues(id);
   };
 
-  const fetchQueues = async (id: number = radioId!) => {
+  const fetchQueues = async (id: string = radioId!) => {
     const { data: q } = await supabase.from("radio_queues_v2").select("*, radio_tracks_v2(*)").eq("radio_id", id).order("position", { ascending: true });
     if (q) setQueues(q);
   };
@@ -309,8 +351,8 @@ export default function OverviewPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!selectedStation) {
-      return <div className="p-8 text-zinc-400 flex items-center justify-center min-h-screen">Memuat radio...</div>;
+  if (!selectedStation || !radioId) {
+      return <div className="p-8 text-zinc-400 flex items-center justify-center min-h-screen"><Loader2 className="animate-spin mr-2" /> Memuat radio...</div>;
   }
 
   const listeners = state?.listener_count || 0;
@@ -512,10 +554,14 @@ export default function OverviewPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 className="text-xl font-bold mb-4 text-zinc-900 dark:text-white flex items-center"><Settings className="mr-2 w-5 h-5"/> Setelan Jingle</h3>
-            <div className="mb-6">
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Putar 1 Jingle setiap ... Lagu</label>
+            <div className="mb-4">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Putar Jingle setiap ... Lagu</label>
                 <input type="number" min="1" max="50" value={jingleInterval} onChange={(e) => setJingleInterval(parseInt(e.target.value))} className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
-                <p className="text-xs text-zinc-500 mt-3 leading-relaxed">Sistem akan otomatis menyelipkan 1 jingle acak setelah N lagu biasa selesai berputar.</p>
+            </div>
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Jumlah Jingle yang diputar</label>
+                <input type="number" min="1" max="10" value={jingleCount} onChange={(e) => setJingleCount(parseInt(e.target.value))} className="w-full bg-zinc-50 dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                <p className="text-xs text-zinc-500 mt-3 leading-relaxed">Sistem akan otomatis menyelipkan {jingleCount} jingle acak setelah {jingleInterval} lagu biasa selesai berputar.</p>
             </div>
             <div className="flex space-x-3">
               <button onClick={() => setShowJingleSettings(false)} className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white py-3 rounded-xl font-semibold transition">Batal</button>
