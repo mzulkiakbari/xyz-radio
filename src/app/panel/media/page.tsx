@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
-import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2 } from "lucide-react";
+import { Upload, Play, MoreVertical, Search, FileAudio, MonitorPlay, Loader2, AlertCircle, Edit2, Trash2, ArrowLeft } from "lucide-react";
 import { useStation } from "@/components/StationContext";
 
 type MediaFile = {
@@ -13,9 +13,11 @@ type MediaFile = {
   title: string;
   length_text: string;
 };
+import { useRouter } from "next/navigation";
 
 export default function MediaPage() {
   const { selectedStation } = useStation();
+  const router = useRouter();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"local" | "youtube">("local");
   
@@ -375,9 +377,17 @@ export default function MediaPage() {
     <div className="p-8 max-w-7xl mx-auto w-full">
       {/* Header & Controls */}
       <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Media Library</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">Kelola semua file audio untuk stasiun {selectedStation.name}</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.push('/panel')}
+            className="p-3 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-zinc-900 dark:text-white transition-colors duration-300">Media Library</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 transition-colors duration-300">Kelola semua file audio untuk stasiun {selectedStation.name}</p>
+          </div>
         </div>
         <button
           onClick={() => setIsUploadModalOpen(true)}

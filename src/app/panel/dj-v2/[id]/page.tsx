@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
-import { MoreVertical, Search, Edit2, Trash2, Upload, Play, Loader2, Music, Mic, Settings } from "lucide-react";
+import { MoreVertical, Search, Edit2, Trash2, Upload, Play, Loader2, Music, Mic, Settings, ArrowLeft } from "lucide-react";
 
 export default function DJPanelV2() {
   const params = useParams();
+  const router = useRouter();
   const rawId = params?.id as string;
   const [radioId, setRadioId] = useState<string | null>(null);
 
@@ -307,8 +308,16 @@ export default function DJPanelV2() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <button 
+            onClick={() => router.push('/panel')}
+            className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl transition-colors border-2 border-gray-700"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-3xl font-bold text-green-400">DJ PANEL V2</h1>
+        </div>
         <div className="bg-gray-800 border-2 border-gray-700 rounded-lg p-6 shadow-2xl">
-          <h1 className="text-3xl font-bold text-center text-green-400 mb-2">DJ PANEL V2</h1>
           
           <div className="bg-black text-green-500 font-mono p-4 rounded text-center my-4 border border-gray-700 h-24 flex flex-col justify-center">
             {state?.is_playing ? (
