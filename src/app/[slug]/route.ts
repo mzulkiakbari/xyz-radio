@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
   const slug = params.slug;
 
   try {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!serviceKey) {
         return new NextResponse("Server configuration error (missing Supabase key)", { status: 500 });
     }
@@ -26,8 +26,11 @@ export async function GET(request: Request, { params }: { params: { slug: string
         .select('id, radio_name, azuracast_station_id, server_url, created_at')
         .order('created_at', { ascending: true }); // Penting: urutkan agar penomoran konsisten
         
-    if (error || !radios) {
-        return new NextResponse("Gagal memuat data radio", { status: 500 });
+    if (error) {
+        return new NextResponse(`Gagal memuat data radio (DB Error): ${error.message}`, { status: 500 });
+    }
+    if (!radios) {
+        return new NextResponse("Gagal memuat data radio (Tidak ada data)", { status: 500 });
     }
 
     const usedSlugs = new Set();
@@ -50,11 +53,19 @@ export async function GET(request: Request, { params }: { params: { slug: string
     }
 
     if (!targetRadio) {
-        return new NextResponse("Radio tidak ditemukan", { status: 404 });
+        return new NextResponse(`Radio dengan link ${slug} tidak ditemukan.`, { status: 404 });
     }
 
     // Redirect ke V2 Stream
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+    // Gunakan server_url dari database radio jika ada, kalau tidak fallback ke env variables
+    let backendUrl = targetRadio.server_url;
+    if (!backendUrl) {
+        backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+    }
+    
+    // Pastikan backendUrl tidak berakhiran /api
+    backendUrl = backendUrl.replace(/\/api$/, '');
+
     return NextResponse.redirect(`${backendUrl}/v2/stream/${targetRadio.id}`);
 
   } catch (err) {

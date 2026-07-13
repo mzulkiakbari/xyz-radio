@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
   try {
     // Inisialisasi Supabase dengan Service Role Key untuk bypass RLS
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (serviceKey) {
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         );
         
         // 1. Coba cari UUID di Supabase (V2)
-        let query = supabaseAdmin.from('radio_orders').select('id');
+        let query = supabaseAdmin.from('radio_orders').select('id, server_url');
         if (id.includes('-')) {
             query = query.eq('id', id);
         } else {
@@ -54,11 +54,15 @@ export async function GET(request: Request) {
         
         if (radioData && radioData.id) {
             // Jika radio terdaftar di sistem kita, redirect ke V2 Stream
-            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+            let backendUrl = radioData.server_url;
+            if (!backendUrl) {
+                backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.RADIO_API_URL || "https://radio.xyz-sa.site";
+            }
+            backendUrl = backendUrl.replace(/\/api$/, '');
             return NextResponse.redirect(`${backendUrl}/v2/stream/${radioData.id}`);
         }
     } else {
-        console.error("V2 Proxy Error: SUPABASE_SERVICE_ROLE_KEY is missing from environment variables!");
+        console.error("V2 Proxy Error: SUPABASE_KEY is missing from environment variables!");
     }
   } catch (err) {
     console.error("V2 Proxy Error:", err);
