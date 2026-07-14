@@ -178,7 +178,7 @@ export default function DJPanelV2() {
   };
 
   const fetchQueues = async (id: string = radioId!) => {
-    const { data: q } = await supabase.from("radio_queues_v2").select("*, radio_tracks_v2(*)").eq("radio_id", id).order("position", { ascending: true });
+    const { data: q } = await supabase.from("radio_queues_v2").select("*, radio_tracks_v2(*)").eq("radio_id", id).gte("position", 0).order("position", { ascending: true });
     if (q) setQueues(q);
   };
 
@@ -205,11 +205,12 @@ export default function DJPanelV2() {
       if (action === 'queue') {
           await supabase.from("radio_queues_v2").insert({ radio_id: radioId, track_id: selectedTrack.id, requested_by: "Web DJ", position: queues.length + 1 });
           toast.success("Berhasil dimasukkan ke antrian");
+          setShowPlayModal(false);
       } else if (action === 'now') {
+          setShowPlayModal(false); // Langsung close modal
           await supabase.from("radio_queues_v2").insert({ radio_id: radioId, track_id: selectedTrack.id, requested_by: "Web DJ", position: -1 });
           await handleSkip();
       }
-      setShowPlayModal(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
