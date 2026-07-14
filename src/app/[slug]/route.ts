@@ -70,7 +70,7 @@ export async function GET(request: Request, context: any) {
     // Pastikan backendUrl tidak berakhiran /api
     backendUrl = backendUrl.replace(/\/api$/, '');
 
-    return NextResponse.redirect(`${backendUrl}/v2/stream/${targetRadio.id}`);
+    return NextResponse.redirect(`${backendUrl}/v2/stream/${targetRadio.id}`, { status: 302 });
 
   } catch (err) {
     console.error("Slug Proxy Error:", err);
