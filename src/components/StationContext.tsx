@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export type Station = {
-  id: number;
+  id: string | number;
   name: string;
   shortcode: string;
   description: string;

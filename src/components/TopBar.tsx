@@ -12,6 +12,10 @@ export function TopBar() {
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -21,6 +25,44 @@ export function TopBar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Effect untuk mengontrol volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  // Effect untuk mereset player saat stasiun berubah
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        audioRef.current.load(); // Paksa muat ulang URL stream yang baru
+        audioRef.current.play().catch(e => {
+            console.error("Gagal auto-play:", e);
+            setIsPlaying(false);
+        });
+      } else {
+          audioRef.current.load();
+      }
+    }
+  }, [selectedStation?.id]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(e => {
+        console.error("Gagal memainkan stream:", e);
+        setIsPlaying(false);
+      });
+    }
+  };
 
   const handleSelectStation = (station: Station) => {
     setSelectedStation(station);
@@ -32,8 +74,15 @@ export function TopBar() {
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const streamUrl = selectedStation ? `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/v2/stream/${selectedStation.id}` : "";
+
   return (
     <div className="hidden md:flex items-center justify-between px-8 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black transition-colors duration-300">
+      {/* Audio Element */}
+      {selectedStation && (
+        <audio ref={audioRef} src={streamUrl} preload="none" />
+      )}
+
       <div className="flex-1 flex items-center">
         {selectedStation && stations.length > 0 && (
           <div className="relative" ref={dropdownRef}>
@@ -93,7 +142,36 @@ export function TopBar() {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-6">
+        {/* Stream Player Controls */}
+        {selectedStation && (
+          <div className="flex items-center space-x-3 bg-zinc-50 dark:bg-zinc-900/50 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={togglePlay}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              aria-label={isPlaying ? "Pause Stream" : "Play Stream"}
+            >
+              {isPlaying ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              )}
+            </button>
+            <div className="w-24 group relative flex items-center">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  aria-label="Volume Control"
+                />
+            </div>
+          </div>
+        )}
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
