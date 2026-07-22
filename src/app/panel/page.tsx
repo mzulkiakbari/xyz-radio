@@ -33,7 +33,7 @@ export default function OverviewPage() {
         }
         
         try {
-            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+            const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
             // Hit the existing Express endpoint to get UUID
             const res = await fetch(`${backendUrl}/api/radio/resolve-id?id=${selectedStation.id}${serverParam}`);
             const json = await res.json();
@@ -92,7 +92,7 @@ export default function OverviewPage() {
   const [jingleCount, setJingleCount] = useState(1);
   const [showJingleSettings, setShowJingleSettings] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+  const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
 
   useEffect(() => {
     setAppUrl(process.env.NEXT_PUBLIC_APP_URL || window.location.origin);

@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api-backend/:path*',
+        destination: 'https://webhook.xyz-sa.site/:path*', // proxy to Backend
+      },
+    ]
+  },
 };
 
 export default nextConfig;

@@ -40,7 +40,7 @@ function AuthLogic({ children }: { children: React.ReactNode }) {
         const email = session.user.email;
         const userId = session.user.id;
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+          const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
           const res = await fetch(`${backendUrl}/api/radio/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

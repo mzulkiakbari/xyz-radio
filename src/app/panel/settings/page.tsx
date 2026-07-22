@@ -32,7 +32,7 @@ export default function SettingsPage() {
 
     setIsSaving(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}?s=${selectedStation.serverUrl}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

@@ -45,7 +45,7 @@ export default function AdminDashboard() {
 
   async function fetchChannels() {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/bot/text-channels`);
       const json = await res.json();
       if (json.success) {
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
 
     setIsSending(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       
       const payload: any = { channelId: selectedChannel };
       if (content) payload.content = content;

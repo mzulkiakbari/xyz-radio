@@ -50,7 +50,7 @@ export default function DJPanelV2() {
   const [jingleInterval, setJingleInterval] = useState(3);
   const [showJingleSettings, setShowJingleSettings] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+  const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
 
   useEffect(() => {
     const resolveId = async () => {

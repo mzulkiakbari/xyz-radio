@@ -74,7 +74,7 @@ export function TopBar() {
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const streamUrl = selectedStation ? `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/v2/stream/${selectedStation.id}` : "";
+  const streamUrl = selectedStation ? `${typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000")}/v2/stream/${selectedStation.id}` : "";
 
   return (
     <div className="hidden md:flex items-center justify-between px-8 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black transition-colors duration-300">

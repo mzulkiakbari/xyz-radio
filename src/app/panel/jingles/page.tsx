@@ -49,7 +49,7 @@ export default function JinglesPage() {
   const [selectedAds, setSelectedAds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+  const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
   
   const reloadMedia = async () => {
     if (!selectedStation) return;

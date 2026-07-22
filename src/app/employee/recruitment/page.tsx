@@ -91,7 +91,7 @@ export default function RecruitmentPage() {
       }
 
       // 2. Trigger Bot API
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/bot/send-open-recruitment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,7 +116,7 @@ export default function RecruitmentPage() {
   };
 
   const handleCloseRecruitment = async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+    const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
     try {
       // Reset is_open for all
       await supabase.from("divisions").update({ is_open: false }).neq("id", "00000000-0000-0000-0000-000000000000"); // dummy condition to update all rows
@@ -149,7 +149,7 @@ export default function RecruitmentPage() {
       if (error) throw error;
 
       // 2. Trigger Bot API to send Apply button message
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/bot/send-apply-format`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

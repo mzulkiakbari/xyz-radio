@@ -72,7 +72,7 @@ export default function MediaPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
         
         // Ambil info paket
         const pkgRes = await fetch(`${backendUrl}/api/radio/station/${selectedStation.id}/package`);
@@ -107,7 +107,7 @@ export default function MediaPage() {
     if (!selectedStation) return;
     setIsLoading(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media?s=${selectedStation.serverUrl}`);
       const json = await res.json();
       if (json.success) {
@@ -124,7 +124,7 @@ export default function MediaPage() {
     if (!selectedStation || !editingMedia || !editTitle.trim()) return;
     setIsProcessing(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${editingMedia.id}?s=${selectedStation.serverUrl}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -150,7 +150,7 @@ export default function MediaPage() {
     if (!selectedStation || !deletingMedia) return;
     setIsProcessing(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/azuracast/stations/${selectedStation.id}/media/${deletingMedia.id}?s=${selectedStation.serverUrl}`, {
         method: "DELETE"
       });
@@ -174,7 +174,7 @@ export default function MediaPage() {
     if (!selectedStation || selectedMediaIds.length === 0) return;
     setIsBatchDeleting(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       
       let successCount = 0;
       let failCount = 0;
@@ -223,7 +223,7 @@ export default function MediaPage() {
     setStatusText("Menghubungkan ke server...");
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/media/download`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -285,7 +285,7 @@ export default function MediaPage() {
     setIsSearching(true);
     setSearchResults([]);
     try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
         const res = await fetch(`${backendUrl}/v2/media/search?q=${encodeURIComponent(ytUrl)}`);
         const json = await res.json();
         if (json.success) {
@@ -303,7 +303,7 @@ export default function MediaPage() {
   const handleClearQueue = async () => {
     if (!selectedStation) return toast.error("Pilih stasiun radio terlebih dahulu!");
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
       const res = await fetch(`${backendUrl}/api/media/download/queue/${selectedStation.id}`, {
         method: "DELETE"
       });
@@ -343,7 +343,7 @@ export default function MediaPage() {
         // Extract base64
         const base64Data = result.split(',')[1];
         
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+        const backendUrl = typeof window !== "undefined" ? "/api-backend" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001");
         
         // Simulasikan progress (karena XMLHttpRequest native susah di hook dengan fetch)
         const progressInterval = setInterval(() => {
